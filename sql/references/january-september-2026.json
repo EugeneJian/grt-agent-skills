@@ -1,0 +1,10 @@
+{
+  "dataset": "shipment_monthly",
+  "filters": [
+    {"column":"month","op":"gte","value":"2026-01-01"},
+    {"column":"month","op":"lt","value":"2026-10-01"},
+    {"column":"sales_unit","op":"eq","value":"PCS"},
+    {"column":"product_line","op":"in","value":["户用单相","离网","户用三相","储能电池","能源互联","阳台储能","工业商用","微网系统","便携储能","微网单相"]}
+  ],
+  "limit": 500
+}

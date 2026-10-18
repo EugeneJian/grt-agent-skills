@@ -1,0 +1,21 @@
+{
+  "default_profile": "cloud",
+  "profiles": {
+    "intranet": {
+      "engine": "postgres",
+      "service": "company_shipping_ro",
+      "max_rows": 1000,
+      "timeout_seconds": 30
+    },
+    "cloud": {
+      "engine": "supabase_api",
+      "url_env": "COMPANY_SUPABASE_URL",
+      "apikey_env": "COMPANY_SUPABASE_API_KEY",
+      "jwt_env": "COMPANY_SUPABASE_USER_JWT",
+      "api_schema": "agent_api",
+      "credentials_file": "~/.config/company-sql/cloud-auth.json",
+      "max_rows": 1000,
+      "timeout_seconds": 30
+    }
+  }
+}

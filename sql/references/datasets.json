@@ -1,0 +1,36 @@
+{
+  "shipment_monthly": {
+    "relation": "shipping.report_product_line_monthly",
+    "api_resource": "shipment_monthly",
+    "columns": {"month":"date","product_line_code":"text","product_line":"text","sales_unit":"text","amount":"number","source_rows":"number"},
+    "order": ["month","product_line_code","sales_unit"]
+  },
+  "shipment_detail": {
+    "relation": "shipping.report_shipments",
+    "api_resource": "shipment_detail",
+    "columns": {"date":"date","pn":"text","amount":"number","country_name":"text","sales_unit":"text","product_line_code":"text","product_line":"text","model_series_code":"text","model_series":"text","product_category_code":"text","product_category":"text","product_subcategory_code":"text","product_subcategory":"text","product_segment_code":"text","product_segment":"text","product_model":"text","power_kw":"number","material_description":"text","material_type":"text"},
+    "order": ["date","pn","country_name","sales_unit","amount"]
+  },
+  "shipment_monthly_including_housing": {
+    "inherits": "shipment_monthly",
+    "relation": "shipping.report_product_line_monthly_including_housing",
+    "api_resource": "shipment_monthly_including_housing"
+  },
+  "shipment_detail_including_housing": {
+    "inherits": "shipment_detail",
+    "relation": "shipping.report_shipments_including_housing",
+    "api_resource": "shipment_detail_including_housing"
+  },
+  "material_sync": {
+    "relation": "master_data.material_sync_runs",
+    "api_resource": "material_sync",
+    "columns": {"source_system":"text","source_extracted_at":"timestamp","expected_rows":"number","status":"text","registered_at":"timestamp","published_at":"timestamp"},
+    "order": ["source_extracted_at"]
+  },
+  "material": {
+    "relation": "master_data.sap_material",
+    "api_resource": "material",
+    "columns": {"matnr":"text","pn_key":"text","maktx":"text","matkl":"text","wgbez":"text","mtart":"text","mstae":"text","zcpx":"text","cpx_txt":"text","zjxxl":"text","jxxl_txt":"text","zcpfl":"text","cpfl_txt":"text","zcpxl":"text","cpxl_txt":"text","zcpxf":"text","cpxf_txt":"text","cpxh":"text","zmodel":"text","zgl":"number","ersda":"date","laeda":"date","synced_at":"timestamp","source_present":"boolean"},
+    "order": ["matnr"]
+  }
+}

@@ -142,6 +142,10 @@ lark-cli auth status
 7. **第 4/5 步脚本**：`python $HOME\.agents\skills\feishu-nav\scripts\setup-tool-links.py`（先预检后 `--apply`，需开发者模式或管理员）、`python $HOME\.agents\skills\feishu-nav\scripts\skill-ssot-audit.py`。
 8. **Git Bash**：可用来执行上文 bash 命令，但**链接创建不要在 Git Bash 里做**（其 `ln -s` 默认生成副本而非真软链），统一用上面的 Python 脚本。
 
+## SQL Skill：云端查询与每台电脑登录
+
+历史出货与物料副本默认使用 Supabase HTTPS。GitHub 只同步 Skill 文件，各电脑的连接配置和员工会话留在仓库外。新电脑下载完整 `sql/` 后，按 [多机同步与登录](sql/references/new-computer.md) 初始化、用本人邮箱登录，再执行只读查询；已有电脑更新 Skill 时保留自己的会话。HTTPS 入口仅需 Python 3.9+，不需要复制本机 PostgreSQL 或配置 MCP。
+
 ## 日常维护
 
 1. 每台机器在开始编辑前，先检查工作区，再拉取。若有未提交工作，先审阅并妥善保存，不能继续照抄后续命令：
@@ -224,7 +228,7 @@ python3 feishu-nav/scripts/skill-ssot-audit.py --tool-specific codex:my-local-sk
 
 ## 数据与安全
 
-- 面向企业内部分发（公开仓库）：内网地址与飞书资源坐标受网络边界和账号权限保护，token/id 是定位信息而非访问凭据；连接凭据只存本地 `.env`，绝不入库（本仓库历史已重写，确保从未包含凭据）
+- 面向企业内部分发（公开仓库）：内网地址与飞书资源坐标受网络边界和账号权限保护，token/id 是定位信息而非访问凭据；连接凭据只存本机受限配置（如 SQL Server `.env` 和 Supabase 用户会话），绝不入库（本仓库历史已重写，确保从未包含凭据）
 - `.gitignore` 保留入库 skill 白名单，并排除常见凭据、缓存及导航导出；它无法检查文件内容，也不影响已经被 Git 跟踪的文件，提交前仍需审阅完整 diff
 - 不提交 `.env`、应用密钥、访问令牌、登录状态或导出的业务记录；发现已提交秘密时先撤销/轮换，再处理历史，不能只补一条忽略规则
 - 业务导出（ndjson 等）统一写入 `~/.agents/skills/.exports/`：隐藏目录不参与 SSOT 审计，且被 Git 忽略；不要写进 `feishu-nav/`、`sql/` 白名单目录，`.gitignore` 的 `*.ndjson` 规则只是兕底

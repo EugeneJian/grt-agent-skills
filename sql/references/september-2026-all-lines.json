@@ -1,0 +1,8 @@
+{
+  "dataset": "shipment_monthly",
+  "filters": [
+    {"column":"month","op":"gte","value":"2026-09-01"},
+    {"column":"month","op":"lt","value":"2026-10-01"}
+  ],
+  "limit": 500
+}

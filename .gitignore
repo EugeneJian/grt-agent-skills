@@ -78,3 +78,9 @@ nav-records*.ndjson
 nav-records*.json
 nav-records*.csv
 nav-records*.tsv
+
+# 每台电脑的 Supabase 会话与运行配置不入库
+cloud-auth*.json
+profiles.json
+.pgpass
+.pg_service.conf

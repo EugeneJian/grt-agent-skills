@@ -1,65 +1,61 @@
 ---
 name: sql
-description: 查询内网 SQL Server 的 oa_report 报表库（SAP 物料/库存/出货/预测）。当用户提到 oa_report、sap_material、rd_prd_stock、rd_delivery、rd_forecast、物料主数据、工厂库存、出货交付、需求预测、PowerBI 数据源，或要求查询内网 10.5.5.163 数据库时使用本 skill。只读查询，禁止写入。
+description: 只读分析公司 SAP 物料、库存、预测和历史出货。历史出货与物料分析副本默认查询 Supabase HTTPS API，本机 PostgreSQL 用于同步验证；实时物料、库存和预测查询 oa_report SQL Server。用于 sap_material、PN 关联、产品线出货和供需分析。
 ---
 
-# oa_report 报表库查询
+# 公司业务数据只读查询
 
-内网 SQL Server 只读库，承载 SAP 同步的物料主数据、工厂库存、出货交付与需求预测，是 PowerBI 的数据源。
+适用于 Pi、Claude Code、Codex 等能执行 Python 的 Agent。历史出货和物料分析副本默认使用 `cloud`（Supabase HTTPS API），通过本 Skill 的统一查询脚本访问。本机 PostgreSQL 的 `local` 保留用于同步验证；运行配置和凭据由所在环境提供，不依赖特定客户端的 MCP。
 
-## 连接信息（只读账号，安全可控）
+## 选择数据源
 
-| 项 | 值 |
+| 问题 | 入口 |
 |---|---|
-| 服务 | Microsoft SQL Server 2017 |
-| 地址 | `10.5.5.163:1433`（内网，需在办公网/VPN 内；本机出口 IP 10.100.48.163） |
-| 库 | `oa_report` |
-| 账号 | 只读账号（仅 SELECT）；凭据保存在本地 `sql/.env`（不入 Git），或用 `OA_USER`/`OA_PWD` 环境变量提供 |
+| 历史出货、产品线趋势、PN / 国家下钻、Power BI 核对 | 默认 `cloud`，运行 `scripts/query_data.py`；先读 [出货规则](references/shipping-analysis.md) |
+| 物料分析副本、PN 属性 | 默认 `cloud`，`material` 数据集 |
+| 同步后核对本机与云端 | 显式使用 `local`，或 `compare_profiles.py --left local --right cloud` |
+| 实时物料 SSOT、库存、预测、指定 `rd_delivery` | 原 `scripts/query.py`，仅 SQL Server；读 [源库说明](references/schema.md) 和 [查询模式](references/query-patterns.md) |
+| 出货与库存 / 预测关联 | 两处分别按完整 PN、期间、单位聚合，再在分析环境关联 |
 
-⚠️ 同 IP 的 3306 端口是另一个 MySQL 实例，与本库无关，不要连错。
-⚠️ **严格只读**：只执行 SELECT；任何 INSERT/UPDATE/DELETE/DDL/DML 一律拒绝并提醒用户。
+## 通用出货查询
 
-## 查询方式（优先用封装脚本）
+`<skill_dir>` 为读取本文件所在目录。Python 3.9+；PostgreSQL 通道另需 `psql`，HTTPS 通道使用 Python 标准库。
 
 ```bash
-# 依赖：pymssql（首次使用先装：pip3 install pymssql）
-# 脚本位置：本 skill 目录下 scripts/query.py
-
-# 方式1：SQL 文件
-python3 <skill_dir>/scripts/query.py @查询.sql
-
-# 方式2：heredoc / stdin
-echo "SELECT TOP 10 * FROM sap_material" | python3 <skill_dir>/scripts/query.py
-
-# 方式3：直接传 SQL 参数（注意 shell 转义）
-python3 <skill_dir>/scripts/query.py "SELECT COUNT(*) FROM rd_delivery"
-
-# 输出格式：--format ndjson（默认，每行一条 JSON，便于 jq/python 后处理）
-#           --format table（对齐表格，适合直接展示）
-# 凭据从本 skill 目录的 .env 自动加载（不入库）；也可用环境变量 OA_HOST / OA_PORT / OA_USER / OA_PWD / OA_DB 覆盖
+python3 <skill_dir>/scripts/query_data.py --list-profiles
+python3 <skill_dir>/scripts/query_data.py @查询.json
+python3 <skill_dir>/scripts/query_data.py --profile local @查询.json
+python3 <skill_dir>/scripts/compare_profiles.py --left local --right cloud @查询.json
 ```
 
-脚本自带只读校验：词法级剥离字符串、注释与带引号标识符后，仅放行**单条** SELECT / WITH 语句，并整词拒绝 INTO、INSERT、EXEC 等写操作/过程调用关键字（`SELECT ... INTO`、`WITH ... INSERT` 变体会被拦下；字符串里的 'update' 等字样不会误拦）。该校验只是第一层防线，最终兜底是数据库只读账号自身的权限，两者不可互相替代。脚本打印行数；行数大的查询先 `SELECT COUNT(*)` 评估再决定是否加 TOP / WHERE / 聚合下推。
+同一份 JSON 在两种通道下使用相同的数据集、字段、筛选和分页。配置默认读取 `~/.config/company-sql/profiles.json`，可用 `COMPANY_SQL_CONFIG` 或 `--config` 指定。标准配置的 `default_profile` 为 `cloud`，日常查询省略 `--profile` 即访问 Supabase；显式 `--profile local` 仅用于本机同步验证。其他主机需配置自己的云端授权会话，Skill 包不携带凭据。
 
-## 表结构与数据画像
+另一台电脑从 GitHub 安装或更新，读 [多机同步与登录](references/new-computer.md)：运行初始化脚本，再由本人在该电脑登录；不复制旧电脑的 Auth 会话。首次接入失败，读 [连接与部署](references/connections.md)。编写查询时读 [查询约定](references/query-contract.md)，字段白名单见 [datasets.json](references/datasets.json)。脚本接受查询 JSON，不接受任意 SQL；返回 JSON 中的 `has_more` 为 true 时必须继续分页，不能把第一页当作完整统计。
 
-完整字段说明见 [references/schema.md](references/schema.md)。速览：
+常见例子：[2026 年 9 月全部产品线及单位](references/september-2026-all-lines.json)。截图专项校验使用 [九月十条线](references/september-2026.json) 或 [1–9 月十条线](references/january-september-2026.json)。普通出货问题使用完整范围，不能自动沿用截图的十条线名单；按用户问题改期间和范围。
 
-| 表 | 行数 | 粒度 | 关键列 |
-|---|---|---|---|
-| `sap_material` | 17.9万 | 物料主数据(PK:MATNR) | MATNR(物料编码), MAKTX(物料描述), WGBEZ(物料组描述), MTART(物料类型), MSTAE(物料状态), ZGJ(国家,注意与出货country口径不同), ZJXXL/JXXL_TXT(机型系列), ZCPX/CPX_TXT(产品线), ZCPXL/CPXL_TXT(产品小类), ZCPFL/CPFL_TXT(产品分类), ZCPXF/CPXF_TXT(产品细分), ZGL(功率KW), ZMODEL(铭牌型号), CPXH(产品型号) |
-| `rd_prd_stock` | 17万 | 月度快照(PK:年月+物料+工厂+库位) | stock(数量,跨月不可加总), meins(单位,需分组), LGOBE(库位描述) |
-| `rd_forecast` | 3万 | 预测单(PK:zz_oaid+工厂+物料+需求日期) | zz_oaid(OA单号,单列不唯一), bdter(需求日期), bdmng(数量), zupdate(上传日期), crdate(建立日期) |
-| `rd_delivery` | 1万 | 年月×物料×国家(PK含country) | doqty(发货数量,无单位字段), country(交付国家,中文,111个) |
-| `uf_jxxl` | 220 | 机型系列字典 | ztext(名称), ZOWNERT(负责人) |
-| `uf_cpx/cpxl/cpfl/cpxf` | 4~23 | 产品线/系列/分类/细分字典 | 编码→名称 |
+默认统计不含机壳（Z0090），保留所有国家和原来源行。数量按销售单位分别汇总。含机壳仅在用户要求时使用 `*_including_housing` 数据集。PN 用完整文本，禁止转数字、去前导零或截断。结果中说明期间、单位、机壳口径及数据截止 / 同步时间。
 
-**数据时间范围**：各表覆盖区间会演进，见 [references/query-patterns.md](references/query-patterns.md)；大表查询前先探测最新月份，不要硬编码。
+云端连接或授权失败时报告 `cloud` 的错误，不能推断为“没有数据”，也不能自动回退到本机。不要拼加两处同源出货。用户明确指定其他通道或要求同步核对时，再切换并说明所用通道和副本新鲜度。
 
-## 标准查询模式
+## 实时 SQL Server 查询
 
-常用 SQL 模板（物料聚合/最新快照探测/出货趋势）与口径坑位（MATNR 匹配、MSTAE 过滤、stock 快照语义）见 [references/query-patterns.md](references/query-patterns.md)。首次写查询前先读它，可避开已知坑。
+源库为内网 `oa_report` SQL Server；实际主机和端口由所在环境的 `OA_HOST/OA_PORT` 提供。原封装脚本及凭据加载方式保留：
 
-## 与飞书多维表格的联动
+```bash
+python3 <skill_dir>/scripts/query.py @查询.sql
+```
 
-本库的 JXXL_TXT（机型系列）与飞书「古瑞瓦特认证多维表格」的「机型系列」「产品线ProductLine」字段同源，可做认证进度 × 库存/出货的交叉分析：先在本库按机型系列聚合业务数据，再到多维表格按同名系列过滤认证记录。
+依赖 `pymssql`。凭据由部署环境的 `OA_HOST/OA_PORT/OA_USER/OA_PWD/OA_DB` 提供，也兼容本机 Skill 根目录既有 `.env`。共享 Skill 包不分发 `.env`。只运行单条 `SELECT` / 只读 `WITH`；脚本有词法校验，数据库账号也必须仅有读取权限。
+
+`sap_material` 是物料 SSOT；`rd_prd_stock` 是月度库存快照，跨月不可相加；`rd_forecast` 是需求预测；`rd_delivery` 不是默认完整历史出货。查询前探测最新年月，不固定使用旧快照。物料状态 / OTHERS 等库存分析筛选不能自动套到历史出货。
+
+## 权限与凭据
+
+本 Skill 仅查询，不执行同步、迁移或数据库写入。PostgreSQL 使用专用只读身份；云端使用 publishable / 兼容 anon 项目 Key 加员工访问 JWT，授权由服务端控制。凭据放环境变量或公司密钥管理，不写进 Skill、查询文件或回复。不得借用其他 Agent 的 OAuth 凭据，禁止使用管理员 / service_role Key 充当日常查询身份。
+
+云端也支持 profile 指定 Skill 外部的 `credentials_file`（0600）：读取独立授权身份的会话并自动刷新。已有 Auth 账号可用 `scripts/auth_login.py` 在终端交互登录，密码不落盘；配置和登录方式见连接说明。登录或续期不等于获得业务数据权限。
+
+点击邮件的浏览器登录可用 `scripts/auth_callback.py` 接收本机回调；收到 localhost 拒绝连接时先检查接收器。会话和邮件链接不应粘贴到聊天。已建立的会话由共享客户端自动续期，各 Agent 日常查询无需重新登录。
+
+已有只读 MCP 可作为额外入口；它不是本 Skill 的运行依赖，也不会因为读取本文件自动获得连接。
