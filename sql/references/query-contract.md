@@ -1,5 +1,7 @@
 # 两种通道共用的查询约定
 
+业务维度、默认范围和汇总规则统一见 [出货语义](shipping-analysis.md)。本页仅定义传输契约。
+
 ## 请求
 
 ```json
@@ -25,7 +27,7 @@
 
 每页默认 500 行，受 profile 的 `max_rows`（默认 1000，上限 10000）约束。若 API 服务端页上限更小，以实际返回行数为准。`offset` 从 0 开始，下一页加 `returned_rows`。所有页面必须使用相同 profile 和查询条件；同步过程中分页不保证同一快照。
 
-`shipment_monthly` 已按月、产品线编码 / 描述、销售单位汇总。需要年度合计时，在读完所有月份后按单位求和；不要把 `source_rows` 当出货量。国家或 PN 下钻使用 `shipment_detail` 并限定期间，分页读取后按完整 PN / 国家 / 单位汇总。大范围复杂聚合可由数据维护方增加专用数据集，避免把所有明细重复传给 Agent。
+`shipment_monthly` 已按月、产品线编码 / 描述、销售单位汇总。需要年度合计时，在读完所有月份后按单位求和；不要把 `source_rows` 当出货量。系列、铭牌、功率、国家或 PN 下钻使用 `shipment_detail` 并限定期间，分页读取后按完整 PN / 国家 / 单位汇总。大范围复杂聚合可由数据维护方增加专用数据集，避免把所有明细重复传给 Agent。
 
 ## 响应
 
@@ -40,3 +42,4 @@
 ## 新鲜度
 
 查 `material_sync`：筛选 `status='complete'`，按 `source_extracted_at desc` 排序取最新一行。明细按 `date desc` 取一行可确认当前可见截止日。`material.synced_at` 是写入副本时间，`source_extracted_at` 才是抽取源库的时间。两通道核对前先确认它们使用同一批数据及同一视图版本。
+

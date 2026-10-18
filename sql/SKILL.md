@@ -11,11 +11,13 @@ description: 只读分析公司 SAP 物料、库存、预测和历史出货。�
 
 | 问题 | 入口 |
 |---|---|
-| 历史出货、产品线趋势、PN / 国家下钻、Power BI 核对 | 默认 `cloud`，运行 `scripts/query_data.py`；先读 [出货规则](references/shipping-analysis.md) |
+| 历史出货、产品线趋势、PN / 国家下钻、Power BI 核对 | 默认 `cloud`，运行 `scripts/query_data.py`；先读 [唯一出货口径与下钻语义](references/shipping-analysis.md) |
 | 物料分析副本、PN 属性 | 默认 `cloud`，`material` 数据集 |
 | 同步后核对本机与云端 | 显式使用 `local`，或 `compare_profiles.py --left local --right cloud` |
 | 实时物料 SSOT、库存、预测、指定 `rd_delivery` | 原 `scripts/query.py`，仅 SQL Server；读 [源库说明](references/schema.md) 和 [查询模式](references/query-patterns.md) |
 | 出货与库存 / 预测关联 | 两处分别按完整 PN、期间、单位聚合，再在分析环境关联 |
+
+产品线 → 机型系列是默认下钻路径；铭牌型号、功率和 PN 按需展开，国家与时间为独立轴。具体字段、未知值保留和两阶段铭牌关联统一遵循 [出货语义](references/shipping-analysis.md#维度与下钻语义唯一业务口径)，不要把 CPXH 产品型号当作 ZMODEL 铭牌型号。
 
 ## 通用出货查询
 
@@ -61,3 +63,4 @@ python3 <skill_dir>/scripts/query.py @查询.sql
 点击邮件的浏览器登录可用 `scripts/auth_callback.py` 接收本机回调；收到 localhost 拒绝连接时先检查接收器。会话和邮件链接不应粘贴到聊天。已建立的会话由共享客户端自动续期，各 Agent 日常查询无需重新登录。
 
 已有只读 MCP 可作为额外入口；它不是本 Skill 的运行依赖，也不会因为读取本文件自动获得连接。
+

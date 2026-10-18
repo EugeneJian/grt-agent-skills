@@ -1,0 +1,10 @@
+{
+  "dataset": "shipment_detail",
+  "select": ["date", "pn", "amount", "sales_unit", "country_name", "product_line_code", "product_line", "model_series_code", "model_series", "product_model", "power_kw"],
+  "filters": [
+    {"column": "date", "op": "gte", "value": "2026-09-01"},
+    {"column": "date", "op": "lt", "value": "2026-10-01"}
+  ],
+  "limit": 500,
+  "offset": 0
+}
