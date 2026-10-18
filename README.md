@@ -8,7 +8,7 @@
 ~/.agents/skills/                         ← 共享 skill 的真实目录
 ├── feishu-nav/                           ← 本 Git 仓库纳管
 │   ├── SKILL.md
-│   ├── scripts/skill-ssot-audit.py        ← 只读拓扑审计
+│   ├── scripts/                            ← SSOT 审计 + 工具链接预检脚本
 │   └── tests/
 ├── sql/                                 ← 本 Git 仓库纳管
 │   ├── SKILL.md
@@ -40,7 +40,7 @@
 
 ## 新电脑部署
 
-以下命令面向 macOS/Linux 终端。已有环境请先盘点；不要直接复制整段执行，也不要删除或覆盖已有目录。
+以下命令面向 macOS/Linux 终端；Windows 差异见本节末尾「Windows 系统差异说明」。已有环境请先盘点；不要直接复制整段执行，也不要删除或覆盖已有目录。
 
 ### 1. 准备命令行工具
 
@@ -55,6 +55,8 @@ gh --version
 python3 --version
 gh auth status
 ```
+
+Windows 可用 winget 一并安装：`winget install OpenJS.NodeJS.LTS Git.Git GitHub.cli Python.Python.3.12`（Python 安装时勾选「Add python.exe to PATH」；Windows 上命令是 `python`，详见「Windows 系统差异说明」）。
 
 GitHub 未登录时，由本人执行 `gh auth login`，选择自己的账号（clone 公开仓库不需要登录，推送仍需认证）。不要将登录凭据放入仓库。
 
@@ -104,61 +106,13 @@ lark-cli auth status                  # 确认认证有效
 
 ### 4. 预检并补齐共享 skill 的链接
 
-下面的脚本**默认只读**：检查完全部目标才打印计划，不会删除、移动或替换任何东西。已有真实 skill 目录、普通文件、错误/断裂链接会让它停止；工具根目录及其父目录是软链时也停止。先人工处理这些冲突，再重新预检。
+预检脚本已随仓库提供（`feishu-nav/scripts/setup-tool-links.py`，逻辑与下述规则一致）：**默认只读**，检查完全部目标才打印计划，不会删除、移动或替换任何东西。已有真实 skill 目录、普通文件、错误/断裂链接会让它停止；工具根目录及其父目录是软链时也停止。先人工处理这些冲突，再重新预检。
 
-确认计划后，将首行改成 `python3 - --apply <<'PY'` 再执行同一段，才会创建缺失的 Claude/Codex 目录与链接。已正确的链接保持原样。不要用 `ln -sfn` 覆盖已有目录，它可能把新链接建到目录内部。
+确认计划后才加 `--apply`，此时才创建缺失的 Claude/Codex 目录与链接。已正确的链接保持原样。不要用 `ln -sfn` 覆盖已有目录，它可能把新链接建到目录内部；Windows 不要用 `mklink /J`（junction 不被审计接受），统一运行本脚本。
 
 ```bash
-python3 - <<'PY'
-import sys
-from pathlib import Path
-
-home = Path.home().resolve()
-source = home / ".agents" / "skills"
-roots = [home / ".claude" / "skills", home / ".codex" / "skills"]
-
-def stop(message):
-    raise SystemExit("停止：" + message + "；未进入创建阶段")
-
-if sys.argv[1:] not in ([], ["--apply"]):
-    stop("只支持无参数预览或 --apply")
-if source.parent.is_symlink() or source.is_symlink() or not source.is_dir():
-    stop(f"真源必须是无软链别名的实际目录：{source}")
-skills = sorted(p for p in source.iterdir()
-                if not p.name.startswith(".") and (p.is_dir() or p.is_symlink()))
-if any(p.is_symlink() for p in skills):
-    stop("真源含软链，请先核对")
-if any(not (p / "SKILL.md").is_file() for p in skills):
-    stop("真源中的 skill 目录缺少 SKILL.md")
-if not skills:
-    stop("真源中没有直接包含 SKILL.md 的 skill 目录")
-
-plan = []
-for root in roots:
-    for p in (root.parent, root):
-        if p.is_symlink() or (p.exists() and not p.is_dir()):
-            stop(f"工具目录路径异常：{p}")
-    for skill in skills:
-        target = root / skill.name
-        if target.is_symlink():
-            if not target.is_dir() or target.resolve() != skill.resolve():
-                stop(f"链接目标不匹配：{target}")
-        elif target.exists():
-            stop(f"已有真实目录或文件：{target}")
-        else:
-            plan.append((target, skill))
-
-for target, skill in plan:
-    print(f"待建：{target} -> {skill}")
-if sys.argv[1:] != ["--apply"]:
-    print(f"只读预检通过，待建 {len(plan)} 个链接；确认后才用 --apply")
-    raise SystemExit(0)
-for root in roots:
-    root.mkdir(parents=True, exist_ok=True)
-for target, skill in plan:
-    target.symlink_to(skill, target_is_directory=True)
-print(f"已创建 {len(plan)} 个链接；请继续运行审计")
-PY
+python3 ~/.agents/skills/feishu-nav/scripts/setup-tool-links.py            # 只读预检
+python3 ~/.agents/skills/feishu-nav/scripts/setup-tool-links.py --apply    # 确认计划后才创建
 ```
 
 该步骤只补齐共享链接，不整理其他现有条目。运行期间不要同时运行其他安装器；若创建中途因权限等错误停止，已创建的链接保留，排除原因后可再次预检并补齐。
@@ -171,6 +125,19 @@ lark-cli auth status
 ```
 
 审计通过只代表目录布局符合下述规则，**不代表 CLI 安装、飞书权限、业务命令或各工具实际加载已验证**。重新打开相关工具的会话，通过各自的 skill 列表/调用入口确认能加载 `feishu-nav`，再对有权访问的导航表做一次只读查询。
+
+### Windows 系统差异说明（公司主要环境）
+
+公司内多数同事使用 Windows（Windows 10/11 + PowerShell）。以下差异适用于本节全部步骤：
+
+1. **终端与权限**：使用 PowerShell。创建符号链接前先开启「开发者模式」（设置 → 系统 → 开发者选项 → 开发人员模式），或以管理员身份运行 PowerShell；否则 `setup-tool-links.py --apply` 会因权限失败。目录 junction 不符合 SSOT 审计要求（会被判为真实副本），不要用 `mklink /J` 替代。
+2. **路径**：`~/.agents/skills` 即 `%USERPROFILE%\.agents\skills`（PowerShell 写作 `$HOME\.agents\skills`）。
+3. **Python**：从 python.org 安装并勾选「Add python.exe to PATH」；Windows 上命令是 `python`（或 `py`），上文所有 `python3` 替换为 `python`。
+4. **工具安装**：`winget install OpenJS.NodeJS.LTS Git.Git GitHub.cli Python.Python.3.12`；Git 克隆、`gh auth login`、lark-cli 各命令与上文一致（lark-cli 安装后若找不到命令，按安装器输出检查 PATH）。
+5. **第 2 步克隆前检查**：PowerShell 用 `Test-Path $HOME\.agents\skills`；已存在且非空时同样停止并人工盘点，不要覆盖。
+6. **第 3 步 .env**：用 `notepad $HOME\.agents\skills\sql\.env` 创建（保存时文件名写作 `".env"`，避免变成 `.env.txt`）；pymssql 装法 `python -m pip install pymssql`。
+7. **第 4/5 步脚本**：`python $HOME\.agents\skills\feishu-nav\scripts\setup-tool-links.py`（先预检后 `--apply`，需开发者模式或管理员）、`python $HOME\.agents\skills\feishu-nav\scripts\skill-ssot-audit.py`。
+8. **Git Bash**：可用来执行上文 bash 命令，但**链接创建不要在 Git Bash 里做**（其 `ln -s` 默认生成副本而非真软链），统一用上面的 Python 脚本。
 
 ## 日常维护
 
@@ -190,9 +157,9 @@ lark-cli auth status
    python3 -m unittest discover -s feishu-nav/tests -v
    python3 -m unittest discover -s sql/tests -v
    git diff --check
-   git diff -- README.md .gitignore feishu-nav/ sql/
+   git diff -- README.md .gitignore feishu-nav/ feishu-lark/ sql/
    # 人工确认无凭据、导出业务数据或无关变更后再暂存
-   git add README.md .gitignore feishu-nav/ sql/
+   git add README.md .gitignore feishu-nav/ feishu-lark/ sql/
    git diff --cached --check
    git diff --cached
    # 再次确认暂存内容后
