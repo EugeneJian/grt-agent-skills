@@ -130,6 +130,8 @@ lark-cli auth status
 
 公司内多数同事使用 Windows（Windows 10/11 + PowerShell）。以下差异适用于本节全部步骤：
 
+> ⚠️ **本节尚未在真实 Windows 机器上实测验证**（撰写于 macOS 环境，依据各工具官方文档整理）。首次在 Windows 部署时如遇命令或行为差异，请核对官方文档并反馈修正本节。
+
 1. **终端与权限**：使用 PowerShell。创建符号链接前先开启「开发者模式」（设置 → 系统 → 开发者选项 → 开发人员模式），或以管理员身份运行 PowerShell；否则 `setup-tool-links.py --apply` 会因权限失败。目录 junction 不符合 SSOT 审计要求（会被判为真实副本），不要用 `mklink /J` 替代。
 2. **路径**：`~/.agents/skills` 即 `%USERPROFILE%\.agents\skills`（PowerShell 写作 `$HOME\.agents\skills`）。
 3. **Python**：从 python.org 安装并勾选「Add python.exe to PATH」；Windows 上命令是 `python`（或 `py`），上文所有 `python3` 替换为 `python`。
