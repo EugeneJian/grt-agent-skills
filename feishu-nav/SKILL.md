@@ -24,13 +24,13 @@ license: MIT
 
 ## 关联核心资源（token 直达）
 
-表内条数、项目数和更新频率为截至 2026-10-17 的记录，未自动刷新；使用前按原表核对。
+本文件只记录资源坐标，不缓存业务事实（条数、状态、进度、逾期等统计）。**业务信息的权威源（SSOT）是飞书文档/原表**：任何汇报口径必须现查原表取得，并注明核验日期；无法访问或无法复核时须明确说明。
 
 | 资源 | 坐标 |
 |---|---|
-| 项目简报（研发项目周报，133 项目） | base `NCcabzBfoa3PofsEgiFcPStKnub` ｜ 表：项目简报 `tblOfatmgETxjnvO`、项目重大事项 `tbltg9hwmWJYgmxE` |
-| 认证多维表格（认证总表，979 条机型×认证项目） | base `CWgfbslNmarywBs9LWNc48jln7d`（wiki `XANgwXpdFi5mXykyxcQcY2nWnrg`）｜ 表：认证总表 `tblfz9QgvNyYxhMK`（视图 `vewz5gv2et`） |
-| 能源互联专项简报（38 条，双周更） | base `EVvvb5diwa4rURsE9K7cCljTnBh` ｜ 表：产品&ECN清单 `tblnPHcI7ND2qsgB` |
+| 项目简报（研发项目周报） | base `NCcabzBfoa3PofsEgiFcPStKnub` ｜ 表：项目简报 `tblOfatmgETxjnvO`、项目重大事项 `tbltg9hwmWJYgmxE` |
+| 认证多维表格（认证总表，机型×认证项目） | base `CWgfbslNmarywBs9LWNc48jln7d`（wiki `XANgwXpdFi5mXykyxcQcY2nWnrg`）｜ 表：认证总表 `tblfz9QgvNyYxhMK`（视图 `vewz5gv2et`） |
+| 能源互联专项简报（双周更） | base `EVvvb5diwa4rURsE9K7cCljTnBh` ｜ 表：产品&ECN清单 `tblnPHcI7ND2qsgB` |
 | 智云产品资料（说明书索引） | base `PsC8buShJajxp0sPQjncSoahn7g` ｜ 表：产品说明书&操作指南 `tblGmm6MTiOEnHls`、用户协议&隐私政策 `tblLdPGK92z74oe5` |
 | 深古研发下单指引链接汇总 | sheet `TBoRsI6vShSQUYthP9YcyfV2nhc`（8 产品线 16 份指引，D 列为文档 mention） |
 | Ecology 产品卡片与官方 Source | base `Iwb6bdAuuaiZTEsLslDcoL4pnpe`（表：产品卡片、官方 Source；AI 数据源视图 table=tblqZqBHRFxoOQIQ） |
@@ -107,12 +107,4 @@ lark-cli base +record-list --base-token CWgfbslNmarywBs9LWNc48jln7d \
 - 逾期判定：**研发预计完成日期 < 今天 且实际完成日期为空**；表内 🚨公式（fldHUDrFOR，'1'/'0'）主要命中已停滞旧项，不作为进行中逾期的唯一口径
 - 全貌口径：状态分布 → 进行中按区域/产品线 → 逾期榜（>30 天 / 30 天内）→ 卡点主题（测试资源紧缺/草稿确认响应慢/整改失败/新标补测）→ 与项目简报「认证进展」字段交叉验证
 - 数据新鲜度：wiki node obj_edit_time 或 max(重要进展更新日期)；部分记录长期无更新需标注停更
-
-## 历史业务快照（记录日期：2026-10-17）
-
-以下是当时记录的排查线索，不是当前事实或已核实的责任判断。数字、状态和逾期天数不会自动更新。**用于任何新汇报前，必须重读上方原始表格**，核对最后更新时间、统计范围、计划日期和当前状态，并注明本次核验日期；无法访问或无法复核时须明确说明，不得直接沿用结论。
-
-- 当时项目简报的「关键进展」使用【月.日】无年份格式；判断年份须结合原表更新时间和上下文核对，不能只按最近日期猜测。仍有歧义时标注年份不确定
-- 当时排查记录：约 100 个「进行中」项目简报停更、18 个重度延期，原因和责任需进一步核查；当时活跃线包括 WIT 大功率（150K/125K-XHU）、X3 新平台和降本专项
-- 当时能源互联记录：ShineWiLanLTE 逾期 107 天、回归缺陷 5/46；GroHomeManager Pro 逾期 17 天。该数字不能直接作为新的汇报口径
 
