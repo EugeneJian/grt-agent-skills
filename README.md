@@ -1,6 +1,6 @@
-# Personal Agent Skills · 同步与 SSOT 部署指南
+# GRT Agent Skills · 同步与 SSOT 部署指南
 
-个人 skill 的手动、多机同步方案。共享 skill 的唯一真源（SSOT）是 `~/.agents/skills/`；Git 同步个人 skill 与 `feishu-lark` 包装 skill，安装器独立管理 CLI 本体等其他第三方内容。
+团队 skill 的多机同步与分发方案。共享 skill 的唯一真源（SSOT）是 `~/.agents/skills/`；Git 同步本仓库纳管的 skill（`feishu-nav`、`sql`、`feishu-lark`），安装器独立管理 CLI 本体等其他第三方内容。
 
 ## 架构
 
@@ -29,7 +29,7 @@
 - Claude/Codex 的同名条目必须是指向该 skill 真身的软链，不能复制一份
 - pi、cc-switch 的目录或链接缺失允许；若存在条目，同样检查其归属和链接目标
 - Codex 的 `.system` 由工具管理。其他非隐藏的工具专属 skill 需逐项声明，见下文
-- 审计仅覆盖顶层非隐藏 skill 条目；`.git`、`.system` 等点开头的元数据项排除检查，不验证其内容，也不支持把个人 skill 藏在这些目录中
+- 审计仅覆盖顶层非隐藏 skill 条目；`.git`、`.system` 等点开头的元数据项排除检查，不验证其内容，也不支持把任何 skill 藏在这些目录中
 
 两条维护通道独立执行，不自动拉取、推送或迁移：
 
@@ -58,7 +58,7 @@ gh auth status
 
 GitHub 未登录时，由本人执行 `gh auth login`，选择自己的账号（clone 公开仓库不需要登录，推送仍需认证）。不要将登录凭据放入仓库。
 
-### 2. 安放个人 skill
+### 2. 安放团队 skill 仓库
 
 先只读检查目标位置：
 
@@ -184,7 +184,7 @@ lark-cli auth status
    ```
 
 2. `pull --ff-only` 因分叉、冲突或其他原因失败时停止编辑/推送，先检查 `git status` 和提交历史，备份本地工作并人工决定如何整合。不要自动 rebase、强制 push、`reset --hard` 或 `git clean`。
-3. 编辑个人内容后，逐步检查并提交；任一步失败都先处理，不要继续：
+3. 编辑 skill 内容后，逐步检查并提交；任一步失败都先处理，不要继续：
 
    ```bash
    python3 -m unittest discover -s feishu-nav/tests -v
@@ -196,7 +196,7 @@ lark-cli auth status
    git diff --cached --check
    git diff --cached
    # 再次确认暂存内容后
-   git commit -m "更新个人 skill"
+   git commit -m "更新 skill"
    git push
    ```
 
@@ -255,7 +255,7 @@ python3 feishu-nav/scripts/skill-ssot-audit.py --tool-specific codex:my-local-sk
 ## 数据与安全
 
 - 面向企业内部分发（公开仓库）：内网地址与飞书资源坐标受网络边界和账号权限保护，token/id 是定位信息而非访问凭据；连接凭据只存本地 `.env`，绝不入库（本仓库历史已重写，确保从未包含凭据）
-- `.gitignore` 保留个人 skill 白名单，并排除常见凭据、缓存及导航导出；它无法检查文件内容，也不影响已经被 Git 跟踪的文件，提交前仍需审阅完整 diff
+- `.gitignore` 保留入库 skill 白名单，并排除常见凭据、缓存及导航导出；它无法检查文件内容，也不影响已经被 Git 跟踪的文件，提交前仍需审阅完整 diff
 - 不提交 `.env`、应用密钥、访问令牌、登录状态或导出的业务记录；发现已提交秘密时先撤销/轮换，再处理历史，不能只补一条忽略规则
 - 业务导出（ndjson 等）统一写入 `~/.agents/skills/.exports/`：隐藏目录不参与 SSOT 审计，且被 Git 忽略；不要写进 `feishu-nav/`、`sql/` 白名单目录，`.gitignore` 的 `*.ndjson` 规则只是兕底
 - 不启用 cc-switch 的 skill 复制同步；若它重新生成真实副本，审计只报告问题，需人工处理
