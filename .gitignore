@@ -1,0 +1,78 @@
+# 只纳管个人 skill 与文档，不跟踪安装的第三方 skills
+*
+!feishu-nav/
+!feishu-nav/**
+!sql/
+!sql/**
+!README.md
+!.gitignore
+!.ignore
+# 说明: pi 等 Agent Skills 扫描器会叠加读取 .gitignore/.ignore/.fdignore,
+# .ignore 中的否定规则可重新放行安装器管理的第三方 skill 目录供扫描;
+# Git 本身不读 .ignore, 第三方 skill 仍不入库。
+
+# 以下规则必须在白名单之后；不会移除已经跟踪的文件
+# 凭据、认证状态与私钥（不要用宽泛的 *.json 误伤测试/配置样例）
+.env
+.env.*
+.credentials/
+credentials
+credentials.json
+credentials.yaml
+credentials.yml
+credentials.toml
+credentials.ini
+credentials.env
+credentials/
+secrets
+secrets.json
+secrets.yaml
+secrets.yml
+secrets.toml
+secrets.ini
+secrets.env
+secrets/
+auth.json
+auth-state.json
+token.json
+tokens.json
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+.lark-cli/
+
+# 缓存、依赖、构建和临时产物
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+.venv/
+venv/
+node_modules/
+build/
+dist/
+coverage/
+htmlcov/
+.coverage
+.coverage.*
+*.log
+*.tmp
+*.swp
+.DS_Store
+
+# 导出的导航业务数据；保留普通文档、脚本和测试 fixture
+# 任何位置的 ndjson 都不入库（含 feishu-nav/、sql/ 白名单目录内部）；
+# 约定统一导出到 ~/.agents/skills/.exports/（隐藏目录：被本文件忽略、也不参与审计）
+*.ndjson
+nav-records/
+nav-records*.ndjson
+nav-records*.json
+nav-records*.csv
+nav-records*.tsv

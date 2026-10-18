@@ -1,0 +1,6 @@
+# pi 等 Agent Skills 扫描器会读取 .gitignore/.ignore/.fdignore 并按顺序叠加规则；
+# 本文件在 ~/.agents/skills/.gitignore 的 "*" 白名单之后重新放行第三方 skill，
+# 使 pi 能扫描到它们。Git 本身不读取 .ignore，第三方 skill 仍不入库。
+# 新增第三方 skill 时，在下面补一行 "!<skill名>/" 和 "!<skill名>/**" 即可。
+!feishu-lark/
+!feishu-lark/**
