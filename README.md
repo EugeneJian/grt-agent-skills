@@ -34,7 +34,7 @@
 
 | 通道 | 内容 | 方式 |
 |---|---|---|
-| Git | `feishu-nav`、`sql`、README、忽略规则 | 私有仓库 `EugeneJian/personal-agent-skills` |
+| Git | `feishu-nav`、`sql`、README、忽略规则 | 公开仓库 `EugeneJian/grt-agent-skills`（面向 Growatt 团队分发） |
 | 安装器 | `feishu-lark` 等第三方 skill | 按各自官方安装/更新说明维护，不提交到个人仓库 |
 
 ## 新电脑部署
@@ -55,7 +55,7 @@ python3 --version
 gh auth status
 ```
 
-GitHub 未登录时，由本人执行 `gh auth login`，选择有此私有仓库访问权限的账号。不要将登录凭据放入仓库。
+GitHub 未登录时，由本人执行 `gh auth login`，选择自己的账号（clone 公开仓库不需要登录，推送仍需认证）。不要将登录凭据放入仓库。
 
 ### 2. 安放个人 skill
 
@@ -75,7 +75,7 @@ PY
 仅在检查通过后克隆：
 
 ```bash
-git clone https://github.com/EugeneJian/personal-agent-skills.git "$HOME/.agents/skills"
+git clone https://github.com/EugeneJian/grt-agent-skills.git "$HOME/.agents/skills"
 ```
 
 **如果目录已经非空：停止新机克隆流程。** 若它已是本仓库，检查 `git -C ~/.agents/skills remote -v` 和 `git -C ~/.agents/skills status` 后转到日常维护；若不是，先逐项核对来源、内容差异并另行备份，由本人决定如何合并。不要自动 `rm`、`mv`、重新初始化 Git 或强制覆盖。此指南和审计脚本都不执行迁移。
