@@ -4,6 +4,8 @@
 !feishu-nav/**
 !sql/
 !sql/**
+!shipment-maintenance/
+!shipment-maintenance/**
 !feishu-lark/
 !feishu-lark/**
 !README.md
@@ -84,3 +86,8 @@ cloud-auth*.json
 profiles.json
 .pgpass
 .pg_service.conf
+
+# 维护配置、批次与备份属于宿主，不公开分发
+maintenance.json
+*.dump
+*.dump.partial

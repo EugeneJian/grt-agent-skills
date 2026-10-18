@@ -52,6 +52,8 @@ python3 <skill_dir>/scripts/query.py @查询.sql
 
 ## 权限与凭据
 
+新增出货文件入库、失败批次续传及双端同步使用同仓库的 `shipment-maintenance` Skill；未安装时报告缺少维护入口。本 Skill 的查询脚本仍只读，不代替维护流程。
+
 本 Skill 仅查询，不执行同步、迁移或数据库写入。PostgreSQL 使用专用只读身份；云端使用 publishable / 兼容 anon 项目 Key 加员工访问 JWT，授权由服务端控制。凭据放环境变量或公司密钥管理，不写进 Skill、查询文件或回复。不得借用其他 Agent 的 OAuth 凭据，禁止使用管理员 / service_role Key 充当日常查询身份。
 
 云端也支持 profile 指定 Skill 外部的 `credentials_file`（0600）：读取独立授权身份的会话并自动刷新。已有 Auth 账号可用 `scripts/auth_login.py` 在终端交互登录，密码不落盘；配置和登录方式见连接说明。登录或续期不等于获得业务数据权限。

@@ -1,0 +1,14 @@
+{
+  "workspace": "/path/to/shipping-workspace",
+  "source_area": "Excel资料",
+  "sql_skill": "~/.agents/skills/sql",
+  "query_config": "~/.config/company-sql/profiles.json",
+  "cloud_profile": "cloud",
+  "local_admin": {
+    "engine": "postgres",
+    "psql_path": "psql",
+    "pg_dump_path": "pg_dump",
+    "pg_restore_path": "pg_restore",
+    "service": "company_shipping_maintenance"
+  }
+}

@@ -1,6 +1,6 @@
 # GRT Agent Skills · 同步与 SSOT 部署指南
 
-团队 skill 的多机同步与分发方案。共享 skill 的唯一真源（SSOT）是 `~/.agents/skills/`；Git 同步本仓库纳管的 skill（`feishu-nav`、`sql`、`feishu-lark`），安装器独立管理 CLI 本体等其他第三方内容。
+团队 skill 的多机同步与分发方案。共享 skill 的唯一真源（SSOT）是 `~/.agents/skills/`；Git 同步本仓库纳管的 skill（`feishu-nav`、`sql`、`shipment-maintenance`、`feishu-lark`），安装器独立管理 CLI 本体等其他第三方内容。
 
 ## 架构
 
@@ -36,7 +36,7 @@
 
 | 通道 | 内容 | 方式 |
 |---|---|---|
-| Git | `feishu-nav`、`sql`、`feishu-lark`、README、忽略规则 | 公开仓库 `EugeneJian/grt-agent-skills`（面向 Growatt 团队分发） |
+| Git | `feishu-nav`、`sql`、`shipment-maintenance`、`feishu-lark`、README、忽略规则 | 公开仓库 `EugeneJian/grt-agent-skills`（面向 Growatt 团队分发） |
 | 安装器 | `lark-cli` CLI 本体及其他第三方 skill | 按各自官方安装/更新说明维护，不提交到本仓库 |
 
 ## 新电脑部署
@@ -145,6 +145,10 @@ lark-cli auth status
 ## SQL Skill：云端查询与每台电脑登录
 
 历史出货与物料副本默认使用 Supabase HTTPS。GitHub 只同步 Skill 文件，各电脑的连接配置和员工会话留在仓库外。新电脑下载完整 `sql/` 后，按 [多机同步与登录](sql/references/new-computer.md) 初始化、用本人邮箱登录，再执行只读查询；已有电脑更新 Skill 时保留自己的会话。HTTPS 入口仅需 Python 3.9+，不需要复制本机 PostgreSQL 或配置 MCP。
+
+## 出货 Excel 增量维护
+
+新增文件入库使用独立 [shipment-maintenance Skill](shipment-maintenance/SKILL.md)：先备份并在本机事务内预演，通过后提交本机、同步 Supabase、核对并归档。日常 `sql` 继续只读。维护需管理员一次性部署固定 RPC 并单独授权员工；没有配置时明确报告未接通。配置、Excel、批次、业务报告与会话不入 Git。具体安装见 [维护部署说明](shipment-maintenance/references/setup.md)。
 
 ## 日常维护
 

@@ -4,3 +4,6 @@
 # 新增第三方 skill 时，在下面补一行 "!<skill名>/" 和 "!<skill名>/**" 即可。
 !feishu-lark/
 !feishu-lark/**
+
+!shipment-maintenance/
+!shipment-maintenance/**
