@@ -4,6 +4,8 @@
 !feishu-nav/**
 !sql/
 !sql/**
+!feishu-lark/
+!feishu-lark/**
 !README.md
 !.gitignore
 !.ignore

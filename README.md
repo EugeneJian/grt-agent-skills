@@ -1,21 +1,22 @@
 # Personal Agent Skills · 同步与 SSOT 部署指南
 
-个人 skill 的手动、多机同步方案。共享 skill 的唯一真源（SSOT）是 `~/.agents/skills/`；Git 同步个人内容，安装器独立管理第三方 skill。
+个人 skill 的手动、多机同步方案。共享 skill 的唯一真源（SSOT）是 `~/.agents/skills/`；Git 同步个人 skill 与 `feishu-lark` 包装 skill，安装器独立管理 CLI 本体等其他第三方内容。
 
 ## 架构
 
 ```text
 ~/.agents/skills/                         ← 共享 skill 的真实目录
-├── feishu-nav/                           ← 本私有 Git 仓库纳管
+├── feishu-nav/                           ← 本 Git 仓库纳管
 │   ├── SKILL.md
 │   ├── scripts/skill-ssot-audit.py        ← 只读拓扑审计
 │   └── tests/
-├── sql/                                 ← 本私有 Git 仓库纳管
+├── sql/                                 ← 本 Git 仓库纳管
 │   ├── SKILL.md
 │   ├── references/schema.md
 │   ├── scripts/query.py                   ← 内网 SQL Server 只读查询
 │   └── tests/
-└── feishu-lark/ 等                       ← 各自安装器管理，不入库
+└── feishu-lark/                          ← 本 Git 仓库纳管（lark-cli 包装 skill）
+    └── SKILL.md                          （lark-cli CLI 本体由 npm 单独安装）
 
 ~/.claude/skills/<共享 skill 名>           → 对应真源目录（必需）
 ~/.codex/skills/<共享 skill 名>            → 对应真源目录（必需）
@@ -34,8 +35,8 @@
 
 | 通道 | 内容 | 方式 |
 |---|---|---|
-| Git | `feishu-nav`、`sql`、README、忽略规则 | 公开仓库 `EugeneJian/grt-agent-skills`（面向 Growatt 团队分发） |
-| 安装器 | `feishu-lark` 等第三方 skill | 按各自官方安装/更新说明维护，不提交到个人仓库 |
+| Git | `feishu-nav`、`sql`、`feishu-lark`、README、忽略规则 | 公开仓库 `EugeneJian/grt-agent-skills`（面向 Growatt 团队分发） |
+| 安装器 | `lark-cli` CLI 本体及其他第三方 skill | 按各自官方安装/更新说明维护，不提交到本仓库 |
 
 ## 新电脑部署
 
@@ -80,21 +81,26 @@ git clone https://github.com/EugeneJian/grt-agent-skills.git "$HOME/.agents/skil
 
 **如果目录已经非空：停止新机克隆流程。** 若它已是本仓库，检查 `git -C ~/.agents/skills remote -v` 和 `git -C ~/.agents/skills status` 后转到日常维护；若不是，先逐项核对来源、内容差异并另行备份，由本人决定如何合并。不要自动 `rm`、`mv`、重新初始化 Git 或强制覆盖。此指南和审计脚本都不执行迁移。
 
-### 3. 安装 CLI，并由本人完成配置和登录
+### 3. 安装 lark-cli 与 feishu-lark skill（飞书操作的关键依赖）
 
-安装 skill 文件不会自动证明 `lark-cli` 命令可用。依据 [lark-cli 官方安装说明](https://github.com/larksuite/cli/blob/main/README.zh.md)（核对于 2026-10-17），人类用户的安装与配置步骤是：
+`feishu-lark` 是操作飞书的关键 skill：agent 借助它调用 `lark-cli`，完成云文档、多维表格、消息、日历等全部飞书操作。它分两部分，缺一不可：
+
+1. **skill 文件**（`feishu-lark/SKILL.md`）：已随本仓库分发，clone 即得，含 agent 路由与用法说明
+2. **`lark-cli` 命令行**：npm 包 `@larksuite/cli`，需每台机器单独安装、配置并登录
+
+依据 [lark-cli 官方安装说明](https://github.com/larksuite/cli/blob/main/README.zh.md)（核对于 2026-10-18），人类用户的安装与配置步骤是：
 
 ```bash
-npx @larksuite/cli@latest install
-command -v lark-cli
-lark-cli config init
-lark-cli auth login --recommend
-lark-cli auth status
+npx @larksuite/cli@latest install     # 安装 CLI
+command -v lark-cli                   # 确认在 PATH 上（找不到时按安装器提示检查 PATH）
+lark-cli config init                  # 交互式配置应用凭证（仅一次，本人完成）
+lark-cli auth login --recommend       # 本人授权登录，确认所授权的权限
+lark-cli auth status                  # 确认认证有效
 ```
 
-每步成功后再继续；本人完成交互式配置，并确认所授权的权限。命令找不到时先按安装器提示检查 PATH，认证失败时先处理认证，不要把拓扑审计通过当作修复。
+每步成功后再继续；认证失败时先处理认证，不要把拓扑审计通过当作修复。安装后重新打开会话，确认各工具能加载 `feishu-lark`，再执行一次只读操作验证（如 `lark-cli skills list`）。
 
-第三方 skill 仍由各自安装器维护。若需要单独安装 larksuite 的 skill，可按官方说明执行 `npx skills add larksuite/cli -g -y`。安装后检查实际落盘位置，不能假设安装器总会生成本仓库要求的布局；发现工具目录中的真实副本时，先停下、比较并备份，再人工决定处理方式。
+**可选：官方领域 skill 目录。** `feishu-lark` 包装 skill 在运行时通过 `lark-cli skills list / skills read` 加载 CLI 内嵌的领域 skill，无需额外安装。如偏好把领域 skill 装成本地目录（如 `lark-doc/`、`lark-base/` 等），可按官方说明执行 `npx skills add larksuite/cli -g -y`。安装后检查实际落盘位置，不能假设安装器总会生成本仓库要求的布局；发现工具目录中的真实副本时，先停下、比较并备份，再人工决定处理方式。其他第三方 skill 仍由各自安装器维护，不入库。
 
 ### 4. 预检并补齐共享 skill 的链接
 
