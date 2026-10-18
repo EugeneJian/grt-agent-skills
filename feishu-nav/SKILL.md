@@ -15,14 +15,17 @@ license: MIT
 
 - URL：https://q02gj5lyidv.feishu.cn/wiki/EOxKwvjQ3igqIdkkdF3cW5SonYn?table=tblgHF305e99kLQz&view=vewrC7NlnR
 - base_token：`NNpAbmIera0mI2sVig2csRSbnNb` ｜ table_id：`tblgHF305e99kLQz` ｜ view_id：`vewrC7NlnR`
-- 字段：`功能`(text, fldaGujNal) ｜ `类型`(select, fldIULwk2G) ｜ `飞书链接`(text/url, flddwrn60E) ｜ `描述`(text, fldatCEF78) ｜ `版本`(text, fldmHUe5vv) ｜ `Last update`(text, fld21cWyt6)
+- 字段：`功能`(text, fldaGujNal) ｜ `类型`(select, fldIULwk2G) ｜ `飞书链接`(text/url, flddwrn60E) ｜ `描述`(text, fldatCEF78) ｜ `Agent 指引`(text, fldxPMJC4o) ｜ `版本`(text, fldmHUe5vv) ｜ `Last update`(text, fld21cWyt6)
 - 类型选项：信息源 / 知识库 / 看板 / 台账
+- **本 skill 涉及资源的领域 SSOT 声明维护在各条目的`描述`字段中**（如「产品生命周期以 Ecology 产品卡片为准」）：读取对应业务前先读导航，定位并核验原表；与已有权威源声明冲突时明确指出，不凭导航描述覆盖。导航修改在下次读取时生效，无需改 skill
+- **单资源操作协议（字段坐标、状态枚举、聚合口径、交叉验证规则）维护在各条目的`Agent 指引`字段**：处理该资源前先读对应条目指引，复用有效坐标直接拉取，不做例行 field-list 探索；指引缺失、字段映射冲突或查询报错时，仅对受影响的字段/表做只读核验。不能仅凭字段非空认定迁移完整；通用流程与异常处理见 [references/overview-protocol.md](references/overview-protocol.md)
 
 ### 维护约定
 
-- 新增条目：功能 + 类型 + 飞书链接用 `[标题](URL)` 格式；描述写「内容 + 业务」一句话
-- Last update 无自动关联（Base 原生不支持读外部文档修改时间），需手动/脚本扫描刷新；写入时用 `drive +search` 或 `+inspect` 取真实 update_time
+- 新增条目：功能 + 类型 + 飞书链接用 `[标题](URL)` 格式；描述写「内容 + 业务」一句话；有操作协议的资源同步写 `Agent 指引`（字段坐标/口径）
+- Last update 无自动关联（Base 原生不支持读外部文档修改时间），需手动/脚本扫描刷新；写入时用 `drive +search` 或 `+inspect` 取真实 update_time（wiki 链接可用 `wiki +node-get` 的 obj_edit_time 比对）
 - 版本字段仅收录自带版本号的文档（如「生态选型表 V08」），在线文档留空
+- 领域 SSOT 声明的维护点是导航条目描述；单资源操作协议的维护点是导航条目「Agent 指引」。本 skill 保留导航读取流程与资源坐标，不另存一份单资源协议；核验发现的缺失/冲突应明确报告，修改导航仍需对应写入授权
 
 ## 关联核心资源（token 直达）
 
@@ -35,7 +38,7 @@ license: MIT
 | 能源互联专项简报（双周更） | base `EVvvb5diwa4rURsE9K7cCljTnBh` ｜ 表：产品&ECN清单 `tblnPHcI7ND2qsgB` |
 | 智云产品资料（说明书索引） | base `PsC8buShJajxp0sPQjncSoahn7g` ｜ 表：产品说明书&操作指南 `tblGmm6MTiOEnHls`、用户协议&隐私政策 `tblLdPGK92z74oe5` |
 | 深古研发下单指引链接汇总 | sheet `TBoRsI6vShSQUYthP9YcyfV2nhc`（8 产品线 16 份指引，D 列为文档 mention） |
-| Ecology 产品卡片与官方 Source | base `Iwb6bdAuuaiZTEsLslDcoL4pnpe`（表：产品卡片、官方 Source；AI 数据源视图 table=tblqZqBHRFxoOQIQ） |
+| Ecology 产品卡片与官方 Source | base `Iwb6bdAuuaiZTEsLslDcoL4pnpe` ｜ 产品卡片 `tblqZqBHRFxoOQIQ`（`生命周期` fldO4GeSSS）｜ 官方 Source `tblD8ivGCAGfNQDJ`（AI 数据源，视图 `vewV9cM8xs`） |
 
 ## SSOT 架构与审计
 
@@ -49,12 +52,13 @@ python3 ~/.agents/skills/feishu-nav/scripts/skill-ssot-audit.py
 ## 常用操作
 
 ```bash
-# 读导航表全部条目（导出统一写入 .exports/：被 Git 忽略，也不参与审计）
+# 读导航视图条目（导出统一写入 .exports/；CLI 的 --output 仅接受当前目录下的相对路径）
 mkdir -p ~/.agents/skills/.exports
+cd ~/.agents/skills/.exports
 lark-cli base +record-list --base-token NNpAbmIera0mI2sVig2csRSbnNb \
   --table-id tblgHF305e99kLQz --view-id vewrC7NlnR \
-  --field-id fldaGujNal --field-id fldIULwk2G --field-id flddwrn60E --field-id fldatCEF78 --field-id fld21cWyt6 \
-  --format ndjson --output ~/.agents/skills/.exports/nav-records.ndjson --overwrite --as user
+  --field-id fldaGujNal --field-id fldIULwk2G --field-id flddwrn60E --field-id fldatCEF78 --field-id fldxPMJC4o --field-id fld21cWyt6 \
+  --format ndjson --output ./nav-records.ndjson --overwrite --as user
 
 # 新增/更新条目：+record-batch-create / +record-batch-update（同表串行写入）
 ```
@@ -63,6 +67,6 @@ lark-cli base +record-list --base-token NNpAbmIera0mI2sVig2csRSbnNb \
 
 | 文档 | 何时读 |
 |---|---|
-| [references/overview-protocol.md](references/overview-protocol.md) | 用户要看项目简报/认证总表全貌，或任何多记录表汇总：预置字段坐标、聚合口径、输出骨架 |
+| [references/overview-protocol.md](references/overview-protocol.md) | 用户要看任何多记录表全貌：通用拉取/聚合/输出骨架；单资源协议（字段坐标与口径）在导航「Agent 指引」 |
 | [references/ssot-audit.md](references/ssot-audit.md) | 审计报错、链接拓扑变更、声明工具专用例外时 |
 

@@ -1,50 +1,14 @@
-# 快速全貌协议（项目 / 认证 / 通用多记录表）
+# 快速全貌协议（通用流程）
 
-目的：降低 TTFT。**默认只给全貌**：字段坐标已预置，直接单次拉取＋本地聚合，禁止先做 field-list 探索；用户追问细节时再展开。
+目的：降低首次响应等待时间。**默认先给全貌**：读取导航条目「Agent 指引」，复用有效字段坐标直接拉取＋本地聚合；用户追问细节时再展开，不做例行 field-list 探索。
 
-## 通用流程（适用任何多记录业务表）
+单资源协议（字段坐标、状态枚举、聚合口径、交叉验证规则）统一维护在导航表「Agent 指引」字段，下次读取即可取得更新。本文件保留跨资源通用流程；条目非空不代表协议已完整迁移，缺失或冲突按下述规则处理，不在本地重复维护单资源协议。
 
-1. 预置坐标单次 `+record-list`（ndjson 统一落盘到 `~/.agents/skills/.exports/`，先 `mkdir -p`；如 brief.ndjson）
-2. 本地聚合：状态分布 → 进行中延期榜 → 卡点主题 top3-5
-3. 输出固定骨架：**数据核验行（表名/记录数/最近更新/核验日期）→ 总盘 → 延期榜 → 风险主题 → 「需要展开？」收尾**
-4. 同会话已落盘 ndjson 直接复用（在 `~/.agents/skills/.exports/` 下按文件名找）；仅当源表可能已更新（按最近编辑时间或用户声明）才重拉
-5. 展开 = 对已落盘数据过滤或补拉缺失字段，不重新探索 schema；默认不向回复倾倒长文本明细
+## 通用流程（适用多记录业务表）
 
-## 项目简报全貌（研发项目）
-
-```bash
-mkdir -p ~/.agents/skills/.exports
-lark-cli base +record-list --base-token NCcabzBfoa3PofsEgiFcPStKnub \
-  --table-id tblOfatmgETxjnvO \
-  --field-id fldT5Yrr5O --field-id fld2sCV8DE --field-id fldeUqt2re --field-id fld11bOAiN \
-  --field-id fldK4mIbii --field-id fld0c6tXVr --field-id fldQoSDaoS --field-id flduKFQJ8t \
-  --field-id fldSyzNO56 --field-id fldGPEPOcu --field-id fldP6jVsu6 --field-id fldZZsdvGo \
-  --field-id fldxck8iiZ \
-  --format ndjson --output ~/.agents/skills/.exports/brief.ndjson --overwrite --as user
-```
-
-字段：项目名称/项目状态/进度状态/当前达成率/部门/里程碑点/里程碑计划与预计完成时间/关键进展/风险点/本周delay原因/资源诉求/认证进展。
-
-- 状态枚举：结案｜进行中｜停滞｜待开案｜取消；进度状态：🟩正常/🟨中度延期/🟥重度延期
-- 全貌口径：状态分布 → 进行中×延期榜（计划→预计、达成率）→ 风险主题聚合（软件人力/物料供应链/认证测试资源/需求变更/降本不达标/停滞处置）→ 停滞清单
-- 重大事项表 `tbltg9hwmWJYgmxE` 补充：字段 fldvz6qhXF 项目名称/fldKiABzvo 重大亮点暗点/fldSbZQOI5 项目达成率/fldq4jEErR 数据更新时间/fldN9w8EgF 月份；最新完整月 = max(月份)
-- 【月.日】无年份：按里程碑与更新时间推断，存疑标注；记录正序/倒序两种都存在，比较日期后取最新；里程碑早已过期且无近期更新的「进行中」标为疑似停更
-
-## 认证总表全貌
-
-```bash
-mkdir -p ~/.agents/skills/.exports
-lark-cli base +record-list --base-token CWgfbslNmarywBs9LWNc48jln7d \
-  --table-id tblfz9QgvNyYxhMK \
-  --field-id fldNikiuS4 --field-id fldctBFUvO --field-id fldcpn4qGm --field-id flddKaDmsx \
-  --field-id fld6KBWqOq --field-id fldkjijUyQ --field-id fldncpwgkH --field-id fldlsJDvJU \
-  --field-id fldNXIJyE6 --field-id fldbceQOyQ --field-id flduJVK9gf --field-id fldwF4KqsS \
-  --format ndjson --output ~/.agents/skills/.exports/cert.ndjson --overwrite --as user
-```
-
-字段：机型/状态/认证/国家地区/区域/产品线/优先级/认证进程百分比/最新进展记录/重要进展更新日期/研发预计完成日期/实际完成日期。
-
-- 状态枚举：✔️ 完成｜开案/测试/草稿/变更/Unstart/Pending for Clarification（进行中；报价属前置阶段，计入需注明）｜已停滞｜正常/Delay Alert/RoHS（旧值）
-- 逾期判定：**研发预计完成日期 < 今天 且实际完成日期为空**；表内 🚨公式（fldHUDrFOR，'1'/'0'）主要命中已停滞旧项，不作为进行中逾期的唯一口径
-- 全貌口径：状态分布 → 进行中按区域/产品线 → 逾期榜（>30 天 / 30 天内）→ 卡点主题（测试资源紧缺/草稿确认响应慢/整改失败/新标补测）→ 与项目简报「认证进展」字段交叉验证
-- 数据新鲜度：wiki node obj_edit_time 或 max(重要进展更新日期)；部分记录长期无更新需标注停更
+1. 读取对应导航条目的「描述」与「Agent 指引」，确认资源、查询范围、所需字段和聚合口径。导航用于定位权威原表；发现权威源声明冲突时明确指出，不擅自覆盖。
+2. 按有效坐标投影读取，用返回的 `columns` 对照指引中的字段名、ID 与类型。指引缺失、字段映射冲突或查询报错时，先用 `+field-get` 核验受影响字段，确有需要再对该表用 `+field-list`；不猜字段含义。schema 无法确认的业务口径应标为待确认，只暂停受影响的指标，继续可核实部分，并报告缺少的证据及待维护的导航条目；不自行写回导航。
+3. 单次 `+record-list` 默认最多读取 2000 条。完整表查询不传 `--view-id`；用户指定视图时保留视图范围并注明。导出统一落盘 `~/.agents/skills/.exports/`：先建目录并进入该目录，再用相对路径 `--output ./brief.ndjson`。检查 `has_more`，如为 true 则按 `next_offset` 用 `--offset` 续读并合并各页，直到 false 才称为完整结果。
+4. 按已核实的资源指引聚合，可包括状态分布、延期榜与风险主题；没有对应字段或口径时不强套项目汇报模板。文本进展记录顺序不固定，应比较日期取最新；无年份或有歧义的日期须说明推断依据，无法核实时标为未知；长期无更新的记录标注疑似停更。
+5. 输出默认骨架：**数据核验行（表名/查询范围/记录数/可取得的最近更新时间/核验日期）→ 总盘 → 适用的延期榜与风险主题**。缺失指标与部分结果须注明限制，不将未知填作正常或零。
+6. 同会话已落盘 ndjson 可复用；源表可能已更新、查询范围改变或用户要求最新时重新读取。展开时优先过滤已有数据，必要时补拉缺失字段，不重复探索已核实 schema；默认不倾倒长文本明细。
