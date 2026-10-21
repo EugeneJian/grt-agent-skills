@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Agent-neutral, read-only dataset queries over PostgreSQL or Supabase Data API."""
+"""Agent-neutral read-only datasets over intranet SQL Server, PostgreSQL or Supabase."""
 import argparse
 import base64
 import datetime
@@ -29,7 +29,7 @@ def configured_profile(config,name):
     profile=config['profiles'].get(name)
     if not isinstance(profile,dict):raise QueryError('Unknown profile; use --list-profiles')
     if {'password','token','jwt','apikey','service_role_key'} & set(profile):raise QueryError('Profile contains a credential; use external secret storage or environment variables')
-    if profile.get('engine') not in ('postgres','supabase_api'):raise QueryError('Unsupported profile engine')
+    if profile.get('engine') not in ('postgres','supabase_api','mssql_rd_delivery'):raise QueryError('Unsupported profile engine')
     return profile
 
 def catalog():
@@ -198,6 +198,16 @@ def run_api(q,profile):
     if not total.isdigit():raise QueryError('Data API did not return the requested exact result count')
     return {'rows':rows,'total':int(total)}
 
+def execute(q,profile):
+    if profile['engine']=='postgres':return run_postgres(q,profile)
+    if profile['engine']=='supabase_api':return run_api(q,profile)
+    if profile['engine']=='mssql_rd_delivery':
+        import mssql_data
+        try:return mssql_data.run(q,profile)
+        except (ValueError,ImportError):raise
+        except Exception:raise QueryError('Intranet SQL Server query failed; check network, credentials and table permissions') from None
+    raise QueryError('Unsupported profile engine')
+
 def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('query',nargs='?',help='Query JSON or @path.json; stdin also accepted')
@@ -214,15 +224,17 @@ def main(argv=None):
         if args.query is None and sys.stdin.isatty():raise QueryError('Provide query JSON, @path.json or stdin')
         raw=Path(args.query[1:]).read_text(encoding='utf-8-sig') if args.query and args.query.startswith('@') else args.query or sys.stdin.read()
         q=normalize(loads(raw),profile);start=time.perf_counter()
-        if profile['engine']=='postgres':result=run_postgres(q,profile)
-        elif profile['engine']=='supabase_api':result=run_api(q,profile)
-        else:raise QueryError('Unsupported profile engine')
+        result=execute(q,profile)
         if not isinstance(result['rows'],list) or len(result['rows'])>q['limit'] or type(result['total']) is not int or result['total']<0:raise QueryError('Invalid result size or count')
         answer={'profile':name,'dataset':q['dataset'],'rows':result['rows'],'returned_rows':len(result['rows']),
             'total_rows':result['total'],'offset':q['offset'],'has_more':q['offset']+len(result['rows'])<result['total'],
             'elapsed_ms':round((time.perf_counter()-start)*1000,1)}
+        if profile['engine']=='mssql_rd_delivery':
+            answer['source']='oa_report SQL Server; live sap_material'
+            if q['dataset']!='material':
+                answer['source_coverage']=result.get('source_coverage');answer['unit_verified']=result.get('unit_verified');answer['grain']='month/PN/country; source_rows unavailable'
         print(json_text(answer));return 0
-    except (QueryError,ValueError,KeyError,OSError,decimal.InvalidOperation) as exc:
+    except (QueryError,ValueError,KeyError,OSError,ImportError,decimal.InvalidOperation) as exc:
         print('query_data: '+str(exc),file=sys.stderr);return 2
 
 if __name__=='__main__':sys.exit(main())

@@ -1,4 +1,4 @@
-# 公司部署与两通道测试
+# 公司部署与查询通道
 
 从 GitHub 下载 Skill 后在另一台电脑接入，见 [多机同步与登录](new-computer.md)。`scripts/setup_cloud.py` 初始化该电脑的配置和公开 Key，员工在该电脑重新登录，不同步旧机器的 access / refresh token。
 
@@ -6,9 +6,9 @@
 
 分发整个 `sql` 文件夹（不含 `.env`、凭据、数据）。让各 Agent 按自己的 Skill 发现机制加载 `SKILL.md`，或提供该文件绝对路径。各宿主需能执行 Python；云端无 Python 第三方依赖，内网 PostgreSQL 另装 `psql`。SQL Server 原功能依赖 `pymssql`。
 
-将 [profiles.example.json](profiles.example.json) 配置到 `~/.config/company-sql/profiles.json`，或通过 `COMPANY_SQL_CONFIG` 指向环境配置。标准 `default_profile` 为 `cloud`，日常查询省略 `--profile` 即使用 Supabase HTTPS。profile 名称和连接元数据可以分发，密码、JWT 不随 Skill 分发。其他 Agent 主机需配置自己的云端授权会话；云端失败时报告错误，不自动回退到本机或内网副本。
+将 [profiles.example.json](profiles.example.json) 配置到 `~/.config/company-sql/profiles.json`，或通过 `COMPANY_SQL_CONFIG` 指向环境配置。标准 `default_profile` 为 `intranet`，省略 `--profile` 即使用内网 SQL Server `rd_delivery` / `sap_material`；依赖 `pymssql`，详见 [内网交货](intranet-delivery.md)。profile 名称和连接元数据可以分发，密码、JWT 不随 Skill 分发。其他 Agent 主机优先配置自己的内网凭据；需要云端时另行登录。任何通道失败都报告错误，不自动回退。
 
-本机部署另保留 `local`，用于同步验证。验证时显式传 `--profile local`，或使用 `compare_profiles.py --left local --right cloud`。未来公司内网 `intranet` 仍可在完成部署后显式选择；它不是默认入口。
+本机部署另保留 `local`，用于同步验证。验证时显式传 `--profile local`，或使用 `compare_profiles.py --left local --right cloud`。`intranet` 当前指 SQL Server；下述 PostgreSQL 部署若实施，应另用 profile 名，不覆盖 SQL Server。
 
 ## 内网 PostgreSQL
 

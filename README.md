@@ -144,13 +144,15 @@ lark-cli auth status
 7. **第 4/5 步脚本**：`python $HOME\.agents\skills\feishu-nav\scripts\setup-tool-links.py`（先预检后 `--apply`，需开发者模式或管理员）、`python $HOME\.agents\skills\feishu-nav\scripts\skill-ssot-audit.py`。
 8. **Git Bash**：可用来执行上文 bash 命令，但**链接创建不要在 Git Bash 里做**（其 `ln -s` 默认生成副本而非真软链），统一用上面的 Python 脚本。
 
-## SQL Skill：云端查询与每台电脑登录
+## SQL Skill：内网默认与可选云端
 
-历史出货与物料副本默认使用 Supabase HTTPS。GitHub 只同步 Skill 文件，各电脑的连接配置和员工会话留在仓库外。新电脑下载完整 `sql/` 后，按 [多机同步与登录](sql/references/new-computer.md) 初始化、用本人邮箱登录，再执行只读查询；已有电脑更新 Skill 时保留自己的会话。HTTPS 入口仅需 Python 3.9+，不需要复制本机 PostgreSQL 或配置 MCP。
+默认查询内网 SQL Server 的 `rd_delivery` 月度表和实时 `sap_material`，安装 `pymssql` 并在各电脑安全配置 OA 连接。旧表覆盖与单位须核对，完整来源仍可显式查询本机 PostgreSQL。Supabase HTTPS 改为可选入口。GitHub 只同步 Skill 文件，各电脑的连接配置和员工会话留在仓库外。新电脑下载完整 `sql/` 后，先读 [内网交货口径](sql/references/intranet-delivery.md)；需要云端时再按 [多机同步与登录](sql/references/new-computer.md) 初始化并用本人邮箱登录；已有电脑更新 Skill 时保留自己的会话。HTTPS 入口仅需 Python 3.9+，不需要复制本机 PostgreSQL 或配置 MCP。
+
+出货权威目标已指定为 `oa_report.dbo.rd_delivery`，物料权威源仍为 `sap_material`。当前结构升级与历史验收尚未完成，保持 `report_only`。PostgreSQL 历史仅作一次性迁移输入；切换后本机与 Supabase 均由内网已提交版本发布。 详见 [SSOT 规则](sql/references/rd-delivery-ssot.md)。
 
 ## 出货 Excel 增量维护
 
-新增文件入库使用独立 [shipment-maintenance Skill](shipment-maintenance/SKILL.md)：先备份并在本机事务内预演，通过后提交本机、同步 Supabase、核对并归档。日常 `sql` 继续只读。维护需管理员一次性部署固定 RPC 并单独授权员工；没有配置时明确报告未接通。配置、Excel、批次、业务报告与会话不入 Git。具体安装见 [维护部署说明](shipment-maintenance/references/setup.md)。
+新增文件入库使用独立 [shipment-maintenance Skill](shipment-maintenance/SKILL.md)：当前内网默认 `report_only`，先生成本机与 `rd_delivery` 差异报告，不写库。另行获批且已部署的云端模式才执行本机预演、提交、同步与归档。日常 `sql` 继续只读。维护需管理员一次性部署固定 RPC 并单独授权员工；没有配置时明确报告未接通。配置、Excel、批次、业务报告与会话不入 Git。具体安装见 [维护部署说明](shipment-maintenance/references/setup.md)。
 
 ## 日常维护
 

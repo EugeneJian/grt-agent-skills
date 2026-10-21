@@ -2,8 +2,9 @@
 
 ## 入口与权限
 
-- 默认入口是 `scripts/query_data.py`，省略 `--profile` 时使用标准配置的 `cloud`（Supabase HTTPS API）。日常出货和物料副本分析默认查云端，不依赖 MCP。
-- 本机 `local` 用于同步验证，需显式指定；也可用 `compare_profiles.py --left local --right cloud` 核对两端。公司 `intranet` 仍需部署后显式选择。其他 Agent 主机需配置自己的云端授权会话，接入见 [connections.md](connections.md)。
+- 内网默认入口详见 [rd_delivery 口径](intranet-delivery.md)。以下视图、来源行和单位规则适用于显式 `local` / `cloud` 完整来源通道。
+- 完整来源查询入口是 `scripts/query_data.py`，必须显式选择 `--profile local` 或 `--profile cloud`，不依赖 MCP。
+- 本机 `local` 用于同步验证，需显式指定；也可用 `compare_profiles.py --left local --right cloud` 核对两端。内网是默认入口，但目前只有原月度表，不能假定已同步完整来源。其他 Agent 主机需配置自己的云端授权会话，接入见 [connections.md](connections.md)。
 - 云端副本项目由所在环境的 profile 绑定；共享 Skill 不硬编码实际项目坐标，客户端凭据不随 Skill 分发。
 - 本 Skill 不调用迁移、写入或同步工具。原 `scripts/query.py` 仅支持 SQL Server，不接收 PostgreSQL 查询。
 
@@ -81,7 +82,7 @@ PN 以完整文本关联 `pn_key=upper(btrim(pn))`，不截断、不去前导零
 按 [查询约定](query-contract.md) 核实时间覆盖与物料同步时间。普通月度分析可复用 [九月全部产品线及单位](september-2026-all-lines.json)；截图专项核对用 [九月十条线](september-2026.json) / [1–9 月十条线](january-september-2026.json)。更换 profile 后仍使用相同文件：
 
 ```bash
-python3 <skill_dir>/scripts/query_data.py @<skill_dir>/references/september-2026-all-lines.json
+python3 <skill_dir>/scripts/query_data.py --profile local @<skill_dir>/references/september-2026-all-lines.json
 python3 <skill_dir>/scripts/compare_profiles.py --left local --right cloud @<skill_dir>/references/september-2026-all-lines.json
 ```
 
@@ -101,7 +102,7 @@ python3 <skill_dir>/scripts/compare_profiles.py --left local --right cloud @<ski
 
 先通过选定通道按完整 PN、期间、销售单位汇总出货，再通过原 `scripts/query.py` 查询内网库存或预测。在分析环境按完整 PN 的大小写不敏感等值语义连接；分别聚合后关联，避免明细多对多放大。
 
-内网库存取实际最新快照月，保留 `meins`，不能跨月累加为当前库存。预测与 `rd_delivery` 没有独立单位字段，比较前需核实口径。两套数据库之间不能直接写普通跨库 JOIN；`rd_delivery` 覆盖不全，默认历史出货不使用它替代 Supabase，也不将两处出货数量相加。
+内网库存取实际最新快照月，保留 `meins`，不能跨月累加为当前库存。预测与 `rd_delivery` 没有独立单位字段，比较前需核实口径。两套数据库之间不能直接写普通跨库 JOIN；内网默认使用 `rd_delivery` 月度表，覆盖、单位与本机 / 云端来源可能不同，不将两处出货数量相加。
 
 当前物料实时核验、云端未同步字段及最新库存 / 预测仍查询内网。物料副本未刷新时，在结果中说明同步日期；本 Skill 不自动触发全量同步。
 

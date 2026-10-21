@@ -10,5 +10,10 @@
     "pg_dump_path": "pg_dump",
     "pg_restore_path": "pg_restore",
     "service": "company_shipping_maintenance"
-  }
+  },
+  "target": "intranet",
+  "mode": "report_only",
+  "intranet_profile": "intranet",
+  "shipment_ssot": "oa_report.dbo.rd_delivery",
+  "ssot_cutover_status": "pending_schema_upgrade"
 }

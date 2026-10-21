@@ -69,9 +69,9 @@ def initialize(config_path, url, key=None, session_path=None):
         api_session.write_session(profile, {'project_url': url, 'apikey': key})
         created = True
     config['profiles']['cloud'] = profile
-    config['default_profile'] = 'cloud'
+    config.setdefault('default_profile', 'cloud')
     api_session.write_session({'credentials_file': str(config_path)}, config)
-    return {'default_profile': 'cloud', 'config': str(config_path),
+    return {'default_profile': config['default_profile'], 'config': str(config_path),
             'session_file': str(target), 'public_key_seed_created': created,
             'existing_session_preserved': not created}
 

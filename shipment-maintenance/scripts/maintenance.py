@@ -89,8 +89,8 @@ class Runtime:
             raise ValueError('psql is required for local validation')
         self.connection = self.client.pg_connection(self.admin)
         query_config = load(config.get('query_config', '~/.config/company-sql/profiles.json'))
-        self.cloud = self.client.configured_profile(query_config, config.get('cloud_profile', 'cloud'))
-        if self.cloud['engine'] != 'supabase_api':
+        self.cloud = None if config.get('target')=='intranet' else self.client.configured_profile(query_config, config.get('cloud_profile', 'cloud'))
+        if self.cloud is not None and self.cloud['engine'] != 'supabase_api':
             raise ValueError('The maintenance cloud profile must use supabase_api')
 
     def pg(self, sql, readonly=False):
@@ -406,10 +406,25 @@ def main():
     parser.add_argument('--overlap-review',help='Only after explicit business review; records why matching rows are distinct deliveries')
     args=parser.parse_args()
     try:
-        runtime=Runtime(load(args.config))
+        config=load(args.config)
+        if (config.get('shipment_ssot')=='oa_report.dbo.rd_delivery'
+                and config.get('target')!='intranet' and args.operation not in ('scan','doctor')):
+            raise ValueError('rd_delivery is the SSOT. Legacy local-to-cloud writes are disabled; publish replicas from a verified committed intranet version')
+        runtime=Runtime(config)
         if args.overlap_review and len(args.overlap_review.strip())<16: raise ValueError('Record a specific overlap review, at least 16 characters')
         if args.operation=='scan':
             print(text_json({'candidates':[{'filename':p.name,'source_sha256':checksum(p)} for p in candidates(runtime)],'database_modified':False})); return 0
+        if runtime.config.get('target','cloud')=='intranet':
+            if args.operation=='doctor':
+                import delivery_diff
+                module,profile=delivery_diff.modules(runtime);conn=module.connect(profile)
+                try:
+                    cursor=conn.cursor();cursor.execute("SELECT COUNT_BIG(*) AS rows,MIN(zyear*100+zmonth) AS first_month,MAX(zyear*100+zmonth) AS last_month,HAS_PERMS_BY_NAME('dbo.rd_delivery','OBJECT','INSERT') AS can_insert,HAS_PERMS_BY_NAME('dbo.rd_delivery','OBJECT','UPDATE') AS can_update FROM dbo.rd_delivery");status=cursor.fetchone()
+                finally:conn.rollback();conn.close()
+                print(text_json({'target':'intranet','mode':'report_only','intranet':status,'database_modified':False}));return 0
+            raise ValueError('Intranet maintenance is report-only. Use delivery_diff.py with explicit months; no database writes or cloud calls are enabled')
+        if runtime.config.get('mode')=='report_only' and args.operation not in ('scan','doctor'):
+            raise ValueError('Maintenance is configured report_only; no database writes are enabled')
         if args.operation=='doctor':
             local,cloud=runtime.inventory(),runtime.rpc('shipment_maintenance_status'); align(local,cloud)
             print(text_json({'local_connected':True,'cloud_connected':True,'baseline_matches':True,'files':len(local['files'])})); return 0

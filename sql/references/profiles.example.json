@@ -1,9 +1,16 @@
 {
-  "default_profile": "cloud",
+  "default_profile": "intranet",
   "profiles": {
     "intranet": {
-      "engine": "postgres",
-      "service": "company_shipping_ro",
+      "engine": "mssql_rd_delivery",
+      "database": "oa_report",
+      "host_env": "OA_HOST",
+      "port_env": "OA_PORT",
+      "user_env": "OA_USER",
+      "password_env": "OA_PWD",
+      "delivery_scope": {
+        "sales_unit": "UNSPECIFIED"
+      },
       "max_rows": 1000,
       "timeout_seconds": 30
     },

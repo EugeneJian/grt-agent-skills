@@ -1,4 +1,4 @@
-# 两种通道共用的查询约定
+# 各通道的查询约定
 
 业务维度、默认范围和汇总规则统一见 [出货语义](shipping-analysis.md)。本页仅定义传输契约。
 
@@ -19,7 +19,7 @@
 }
 ```
 
-数据集：`shipment_monthly`、`shipment_detail`、对应的 `*_including_housing`、`material`、`material_sync`。字段和类型来自 [datasets.json](datasets.json)。省略 `select` 取该数据集全部允许字段；字段选择不会去重或重新聚合。
+内网能力和限制见 [内网交货](intranet-delivery.md)：`delivery_by_pn_month` 是月度 PN / 国家汇总，单位未核对时为 `UNSPECIFIED`，不支持 `shipment_detail` / `material_sync`。原完整来源通道的数据集：`shipment_monthly`、`shipment_detail`、对应的 `*_including_housing`、`material`、`material_sync`。字段和类型来自 [datasets.json](datasets.json)。省略 `select` 取该数据集全部允许字段；字段选择不会去重或重新聚合。
 
 筛选是 AND；支持 `eq/gt/gte/lt/lte/in/isnull`。`in` 接受 1–100 个同类型值，`isnull` 接受布尔值。日期为 `YYYY-MM-DD`，时间戳使用带时区 ISO 8601；文本保留前导零。最多 30 个条件。不能传表达式、JOIN、SQL 或自定义函数。
 
@@ -41,5 +41,6 @@
 
 ## 新鲜度
 
-查 `material_sync`：筛选 `status='complete'`，按 `source_extracted_at desc` 排序取最新一行。明细按 `date desc` 取一行可确认当前可见截止日。`material.synced_at` 是写入副本时间，`source_extracted_at` 才是抽取源库的时间。两通道核对前先确认它们使用同一批数据及同一视图版本。
+完整来源通道查 `material_sync`：筛选 `status='complete'`，按 `source_extracted_at desc` 排序取最新一行。明细按 `date desc` 取一行可确认当前可见截止日。`material.synced_at` 是写入副本时间，`source_extracted_at` 才是抽取源库的时间。两通道核对前先确认它们使用同一批数据及同一视图版本。
 
+内网直接读取物料 SSOT，没有副本同步批次；查询响应给出月度表覆盖和单位核对状态，实际源表覆盖不足时不能解释成业务零出货。

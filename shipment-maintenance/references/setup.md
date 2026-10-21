@@ -1,5 +1,11 @@
 # 配置与权限
 
+出货权威目标已指定为 `oa_report.dbo.rd_delivery`，物料权威源仍为 `sap_material`。当前结构升级与历史验收尚未完成，保持 `report_only`。PostgreSQL 历史仅作一次性迁移输入；切换后本机与 Supabase 均由内网已提交版本发布。 配置以 `shipment_ssot="oa_report.dbo.rd_delivery"` 和 `ssot_cutover_status="pending_schema_upgrade"` 记录状态；结构升级由 DBA 配合完成。旧的本机→云端直写模式不用于新权威入库。
+
+默认使用内网差异模式：配置 `target="intranet"`、`mode="report_only"`、`intranet_profile="intranet"`，查询配置指向 SQL Skill 的 `mssql_rd_delivery` profile。`doctor` 只读探测现有表，`delivery_diff.py --from-month YYYY-MM-01 --through-month YYYY-MM-01` 比较本机 PCS 月度汇总与旧表原值，结果存私有批次目录，不发云端、不修改数据库和归档。内网驱动需要 `pymssql`；可使用已安装它的宿主 Python。内网写入适配尚未启用。
+
+下面的云端部署仅适用于另行批准并显式配置 `target="cloud"` 的环境；云端权限不足时不自动部署角色 / RLS / RPC。
+
 Skill 与同仓库 `sql` 一起安装到宿主共享 Skill 目录，供各 Agent 使用；连接配置、批次、Excel、业务报告和会话都留在仓库外。安装依赖到独立虚拟环境：`python3 -m pip install -r <skill_dir>/requirements.txt`。
 
 将 [配置示例](maintenance.example.json) 复制到 `~/.config/company-sql/maintenance.json`，替换工作区和本机维护连接。`sql_skill` 指向已安装的只读 SQL Skill；`query_config` 指向它的连接配置，`cloud_profile` 选已有 Supabase HTTPS profile。它复用该电脑本人重新登录的员工会话，不复制其他电脑的 token。

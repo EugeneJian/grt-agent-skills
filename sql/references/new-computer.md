@@ -1,3 +1,5 @@
+> 默认入口已改为内网 SQL Server：先安装 `pymssql`，在本机安全配置 OA 连接，按 `profiles.example.json` 使用 `intranet`。以下步骤用于显式启用可选 `cloud`；不要覆盖已经配置的内网默认入口。参见 [内网交货](intranet-delivery.md)。
+
 # 从 GitHub 同步 Skill，并在新电脑登录
 
 GitHub 分发 Skill 文件；每台电脑的连接配置与员工会话保存在仓库之外。已有账号在新电脑用同一员工邮箱重新登录，沿用服务器现有的只读授权。其他员工仍需管理员单独加入业务白名单。
@@ -22,7 +24,7 @@ python3 sql/scripts/setup_cloud.py --url https://your-project.supabase.co
 
 首次运行时在终端粘贴项目的 **Publishable key**（或兼容 anon key），不回显；可从 Supabase 项目 Settings → API Keys 获取。宿主也可通过 `COMPANY_SUPABASE_API_KEY` 注入。它是项目客户端标识，本身不授予业务读取权限。不要填 secret key、service_role 或员工 JWT。
 
-脚本在 `~/.config/company-sql/` 创建配置及仅含项目 URL、公开 Key 的初始会话文件，默认入口为 `cloud`。已有同项目会话不改写，保留其他 profile；已有不同项目的 cloud 配置则停止。可用 `--config` 和 `--session-file` 指定独立路径。
+脚本在 `~/.config/company-sql/` 创建配置及仅含项目 URL、公开 Key 的初始会话文件，已有默认入口保持不变；仅云端初始化的空配置默认 `cloud`，内网部署须按示例配置 `intranet`。已有同项目会话不改写，保留其他 profile；已有不同项目的 cloud 配置则停止。可用 `--config` 和 `--session-file` 指定独立路径。
 
 ## 本人登录
 

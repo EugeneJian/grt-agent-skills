@@ -37,8 +37,7 @@ def collect(spec, profile, max_pages):
     for _ in range(max_pages):
         request['offset'] = offset
         q = client.normalize(request, profile)
-        result = (client.run_postgres(q, profile) if profile['engine'] == 'postgres'
-                  else client.run_api(q, profile))
+        result = client.execute(q, profile)
         if not isinstance(result['rows'], list) or len(result['rows']) > q['limit']:
             raise client.QueryError('Invalid result page')
         if expected is None:

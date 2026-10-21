@@ -74,3 +74,12 @@ class SetupTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+class PreserveDefault(unittest.TestCase):
+    def test_existing_intranet_default_survives_optional_cloud_setup(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);config=root/'profiles.json';session=root/'session.json'
+            config.write_text(json.dumps({'default_profile':'intranet','profiles':{'intranet':{'engine':'mssql_rd_delivery'}}}))
+            result=setup_cloud.initialize(config,'https://test.supabase.co',key='sb_publishable_test',session_path=session)
+            self.assertEqual(result['default_profile'],'intranet')
+            self.assertEqual(json.loads(config.read_text())['default_profile'],'intranet')
