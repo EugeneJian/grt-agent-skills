@@ -8,6 +8,8 @@
 !shipment-maintenance/**
 !feishu-lark/
 !feishu-lark/**
+!claude-code-toolsearch/
+!claude-code-toolsearch/**
 !README.md
 !.gitignore
 !.ignore

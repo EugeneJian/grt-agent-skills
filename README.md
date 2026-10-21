@@ -15,8 +15,10 @@
 │   ├── references/schema.md
 │   ├── scripts/query.py                   ← 内网 SQL Server 只读查询
 │   └── tests/
-└── feishu-lark/                          ← 本 Git 仓库纳管（lark-cli 包装 skill）
-    └── SKILL.md                          （lark-cli CLI 本体由 npm 单独安装）
+├── feishu-lark/                          ← 本 Git 仓库纳管（lark-cli 包装 skill）
+│   └── SKILL.md                          （lark-cli CLI 本体由 npm 单独安装）
+└── claude-code-toolsearch/               ← 本 Git 仓库纳管（Claude Code 排障常识）
+    └── SKILL.md                          （仅 Claude Code 适用）
 
 ~/.claude/skills/<共享 skill 名>           → 对应真源目录（必需）
 ~/.codex/skills/<共享 skill 名>            → 对应真源目录（必需）
@@ -36,7 +38,7 @@
 
 | 通道 | 内容 | 方式 |
 |---|---|---|
-| Git | `feishu-nav`、`sql`、`shipment-maintenance`、`feishu-lark`、README、忽略规则 | 公开仓库 `EugeneJian/grt-agent-skills`（面向 Growatt 团队分发） |
+| Git | `feishu-nav`、`sql`、`shipment-maintenance`、`feishu-lark`、`claude-code-toolsearch`、README、忽略规则 | 公开仓库 `EugeneJian/grt-agent-skills`（面向 Growatt 团队分发） |
 | 安装器 | `lark-cli` CLI 本体及其他第三方 skill | 按各自官方安装/更新说明维护，不提交到本仓库 |
 
 ## 新电脑部署
