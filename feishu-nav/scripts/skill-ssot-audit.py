@@ -4,6 +4,11 @@
 Shared skills live in real directories at ~/.agents/skills/<name>/SKILL.md.
 Claude and Codex require matching links. Pi scans the canonical root natively;
 its links and the retired cc-switch root are optional, but checked if present.
+Skills declared in the root .skill-tools manifest are distributed to a subset
+of tools only (e.g. claude-code-toolsearch is Claude Code exclusive): the
+manifest tools must have their links, other tools must NOT have entries, and
+pi scan visibility of the canonical root must match (hidden skills require
+.gitignore/.ignore/.fdignore rules that pi layers in that order).
 Hidden top-level metadata (including Codex .system) is outside the shared set.
 Other tool-only skills require explicit --tool-specific TOOL:SKILL exceptions.
 No Git tracking, CLI authentication, runtime loading, or repair is performed.
@@ -14,6 +19,10 @@ import hashlib
 import os
 from pathlib import Path
 import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from skill_distribution import (IGNORE_FILES, KNOWN_TOOLS, load_distribution,
+                                 pi_ignores, tools_for)
 
 
 TOOL_PATHS = {
@@ -54,7 +63,7 @@ def dhash(root):
     return h.hexdigest()[:12]
 
 
-def audit(home, required_tools=None, tool_specific=None, emit=print):
+def audit(home, required_tools=None, tool_specific=None, distribution=None, emit=print):
     """Audit configured roots for the supplied home; return 0 (pass) or 1 (fail)."""
     home = Path(home).resolve()
     required = DEFAULT_REQUIRED | set(required_tools or ())
@@ -111,6 +120,19 @@ def audit(home, required_tools=None, tool_specific=None, emit=print):
         if not (path / "SKILL.md").is_file():
             fail(f"[缺失 SKILL.md] {name}: {path / 'SKILL.md'}")
 
+    emit("\n== 工具分发清单 ==")
+    if distribution is None:
+        distribution, manifest_problems = load_distribution(roots["agents"])
+        for problem in manifest_problems:
+            fail(f"[清单无效] {problem}")
+    for name in sorted(set(distribution) - set(shared)):
+        fail(f"[清单无效] {name} 不在真源中（.skill-tools 声明了不存在的 skill）")
+    for name in sorted(set(distribution) & set(shared)):
+        if not (set(distribution[name]) - {"pi"}):
+            fail(f"[清单无效] {name} 至少要分发到一个链接工具（claude/codex）")
+        else:
+            emit(f"  分发: {name} -> {', '.join(sorted(tools_for(distribution, name)))}")
+
     emit("\n== 工具专用例外 ==")
     for name, owner in sorted(exceptions.items()):
         if owner not in valid_roots:
@@ -137,8 +159,14 @@ def audit(home, required_tools=None, tool_specific=None, emit=print):
                 continue
             path = roots[tool] / name
             canonical = roots["agents"] / name
+            managed = tool in KNOWN_TOOLS  # 分发清单只约束 claude/codex/pi
             if not present(path):
-                fail(f"[缺失入口] {name} @ {tool}: {path}")
+                if (name in shared and tool in required
+                        and (not managed or tool in tools_for(distribution, name))):
+                    fail(f"[缺失入口] {name} @ {tool}: {path}")
+                continue
+            if name in shared and managed and tool not in tools_for(distribution, name):
+                fail(f"[未分发却存在] {name} @ {tool}: 分发清单不含 {tool}，请人工删除: {path}")
                 continue
             if name not in shared:
                 fail(f"[真源缺失] {name} @ {tool}: 应存在 {canonical / 'SKILL.md'}；工具专用项需显式例外")
@@ -161,6 +189,19 @@ def audit(home, required_tools=None, tool_specific=None, emit=print):
                 fail(f"[缺失 SKILL.md] {name} @ {tool}: {resolved}")
             else:
                 emit(f"  ✓ {name} @ {tool} -> {expected}")
+
+    emit("\n== pi 扫描可见性 ==")
+    if "agents" in valid_roots:
+        for name in sorted(shared):
+            expect_visible = "pi" in tools_for(distribution, name)
+            ignored, rule_file = pi_ignores(roots["agents"], name)
+            if expect_visible and ignored:
+                fail(f"[pi 不可见] {name} 被 {rule_file} 忽略，但分发清单要求 pi 可见")
+            elif not expect_visible and not ignored:
+                fail(f"[pi 应隐藏] {name} 分发清单不含 pi，需在 {'/'.join(IGNORE_FILES)} 中忽略，"
+                     f"否则 pi 扫描真源会加载它")
+            else:
+                emit(f"  ✓ {name} @ pi {'可见' if expect_visible else '已隐藏'}")
 
     emit("\n== 重复真身 ==")
     real = {}

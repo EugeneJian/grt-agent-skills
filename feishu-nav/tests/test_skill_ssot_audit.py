@@ -42,6 +42,12 @@ class AuditTests(unittest.TestCase):
         result = AUDIT.audit(self.home, emit=output.append, **kwargs)
         return result, "\n".join(output)
 
+    def manifest(self, text):
+        (self.canonical / ".skill-tools").write_text(text, encoding="utf-8")
+
+    def ignore_rule(self, text, filename=".ignore"):
+        (self.canonical / filename).write_text(text, encoding="utf-8")
+
     def fails(self, marker, **kwargs):
         result, output = self.run_audit(**kwargs)
         self.assertEqual(result, 1, output)
@@ -253,6 +259,76 @@ class AuditTests(unittest.TestCase):
         shutil.rmtree(self.roots["claude"])
         self.roots["claude"].symlink_to(self.canonical)
         self.fails("目录类型")
+
+    def test_restricted_distribution_passes_without_codex_link(self):
+        source = self.skill(self.canonical, "claude-only-skill")
+        self.manifest("claude-only-skill: claude\n")
+        self.ignore_rule("claude-only-skill/\n")
+        for tool in AUDIT.DEFAULT_REQUIRED:
+            self.roots[tool].mkdir(parents=True, exist_ok=True)
+        (self.roots["claude"] / "claude-only-skill").symlink_to(source)
+        result, output = self.run_audit()
+        self.assertEqual(result, 0, output)
+        self.assertIn("claude-only-skill @ pi 已隐藏", output)
+
+    def test_restricted_distribution_rejects_undeclared_tool_link(self):
+        source = self.skill(self.canonical, "claude-only-skill")
+        self.manifest("claude-only-skill: claude\n")
+        self.ignore_rule("claude-only-skill/\n")
+        for tool in AUDIT.DEFAULT_REQUIRED:
+            self.roots[tool].mkdir(parents=True, exist_ok=True)
+            (self.roots[tool] / "claude-only-skill").symlink_to(source)
+        self.fails("未分发却存在")
+
+    def test_restricted_distribution_requires_declared_tool_link(self):
+        self.skill(self.canonical, "claude-only-skill")
+        self.manifest("claude-only-skill: claude\n")
+        self.ignore_rule("claude-only-skill/\n")
+        for tool in AUDIT.DEFAULT_REQUIRED:
+            self.roots[tool].mkdir(parents=True, exist_ok=True)
+        self.fails("缺失入口")
+
+    def test_pi_hidden_skill_requires_ignore_rule(self):
+        source = self.skill(self.canonical, "claude-only-skill")
+        self.manifest("claude-only-skill: claude\n")
+        for tool in AUDIT.DEFAULT_REQUIRED:
+            self.roots[tool].mkdir(parents=True, exist_ok=True)
+        (self.roots["claude"] / "claude-only-skill").symlink_to(source)
+        self.fails("pi 应隐藏")
+
+    def test_default_distribution_rejects_accidental_pi_hide(self):
+        self.valid()
+        self.ignore_rule("example/\n")
+        self.fails("pi 不可见")
+
+    def test_ignore_layering_later_file_rehides_whitelisted_skill(self):
+        self.valid()
+        self.ignore_rule("*\n!example/\n!example/**\n", filename=".gitignore")
+        result, output = self.run_audit()
+        self.assertEqual(result, 0, output)  # .gitignore 白名单保持可见
+        self.ignore_rule("example/\n")      # .ignore 后叠加，重新隐藏
+        self.fails("pi 不可见")
+
+    def test_manifest_stale_entry_fails(self):
+        self.valid()
+        self.manifest("ghost-skill: claude\n")
+        self.fails("不在真源中")
+
+    def test_manifest_malformed_lines_fail(self):
+        self.valid()
+        for text in ("no-colon-line\n", "example: terminal\n", "example: \n",
+                     "example: claude\nexample: codex\n"):
+            with self.subTest(text=text.strip()):
+                self.manifest(text)
+                self.fails("清单无效")
+                (self.canonical / ".skill-tools").unlink()
+
+    def test_manifest_symlink_fails(self):
+        self.valid()
+        other = self.home / "manifest-elsewhere"
+        other.write_text("example: claude\n")
+        (self.canonical / ".skill-tools").symlink_to(other)
+        self.fails("清单无效")
 
     def test_cli_exit_codes_use_only_temporary_home(self):
         # Apple Python (macOS CommandLineTools) writes its bytecode cache into

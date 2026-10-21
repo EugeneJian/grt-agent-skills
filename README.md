@@ -18,10 +18,11 @@
 ├── feishu-lark/                          ← 本 Git 仓库纳管（lark-cli 包装 skill）
 │   └── SKILL.md                          （lark-cli CLI 本体由 npm 单独安装）
 └── claude-code-toolsearch/               ← 本 Git 仓库纳管（Claude Code 排障常识）
-    └── SKILL.md                          （仅 Claude Code 适用）
+    └── SKILL.md                          （仅 Claude Code 适用，不分发给其他 agent）
 
-~/.claude/skills/<共享 skill 名>           → 对应真源目录（必需）
-~/.codex/skills/<共享 skill 名>            → 对应真源目录（必需）
+~/.agents/skills/.skill-tools             ← 工具分发清单（隐藏文件，Git 纳管）
+~/.claude/skills/<共享 skill 名>           → 对应真源目录（按分发清单，必需）
+~/.codex/skills/<共享 skill 名>            → 对应真源目录（按分发清单，必需）
 ~/.codex/skills/.system/                  ← Codex 管理的内置例外
 ~/.pi/agent/skills/                       ← 可不建；pi 直接扫描真源
 ~/.cc-switch/skills/                      ← 已退役、可不建
@@ -30,6 +31,7 @@
 - 共享 skill 必须是规范目录的非隐藏直接子目录，含 `SKILL.md`，不能再是软链
 - **渐进式披露约定**：`SKILL.md` 只保留入口层（定位、能力地图、主坐标、深入文档索引），建议 ≤100 行；查询协议、字段口径、审计规则等深水内容放 `<skill>/references/*.md`，agent 按任务需要再读取。新增深度内容时优先扩 references，不要把 SKILL.md 养成大全
 - Claude/Codex 的同名条目必须是指向该 skill 真身的软链，不能复制一份
+- **工具分发**：根目录 `.skill-tools` 按 skill 声明分发工具（claude、codex、pi=扫描真源可见），未声明的默认全部；对 pi 隐藏的需同时在忽略链路补规则，预检与审计都会校验（如 claude-code-toolsearch 仅分发 claude）
 - pi、cc-switch 的目录或链接缺失允许；若存在条目，同样检查其归属和链接目标
 - Codex 的 `.system` 由工具管理。其他非隐藏的工具专属 skill 需逐项声明，见下文
 - 审计仅覆盖顶层非隐藏 skill 条目；`.git`、`.system` 等点开头的元数据项排除检查，不验证其内容，也不支持把任何 skill 藏在这些目录中
@@ -38,7 +40,7 @@
 
 | 通道 | 内容 | 方式 |
 |---|---|---|
-| Git | `feishu-nav`、`sql`、`shipment-maintenance`、`feishu-lark`、`claude-code-toolsearch`、README、忽略规则 | 公开仓库 `EugeneJian/grt-agent-skills`（面向 Growatt 团队分发） |
+| Git | `feishu-nav`、`sql`、`shipment-maintenance`、`feishu-lark`、`claude-code-toolsearch`、README、忽略规则与 `.skill-tools` 分发清单 | 公开仓库 `EugeneJian/grt-agent-skills`（面向 Growatt 团队分发） |
 | 安装器 | `lark-cli` CLI 本体及其他第三方 skill | 按各自官方安装/更新说明维护，不提交到本仓库 |
 
 ## 新电脑部署
@@ -229,6 +231,8 @@ python3 feishu-nav/scripts/skill-ssot-audit.py --tool-specific codex:my-local-sk
 | 必需工具 | 默认 Claude、Codex 必须具备对应共享链接；`--require-tool` 可重复追加 `pi`、`cc-switch`、`claude`、`codex` |
 | 可选工具 | pi 直接扫描真源，cc-switch 已退役；缺少根目录或共享链接允许，但存在的条目仍检查 |
 | 精确链接 | 每个共享条目必须链接到真源中**同名**的 skill 目录；断链、错名/错目标、真实副本均失败 |
+| 分发清单 | `.skill-tools` 只能声明真源中的 skill，工具限 claude/codex/pi 且至少含一个链接工具；声明的工具须有链接，未声明的受管工具不得有入口 |
+| pi 可见性 | 分发含 pi 的 skill 必须对真源扫描可见；不含 pi 的必须被 `.gitignore`/`.ignore`/`.fdignore` 链路忽略（pi 按此顺序叠加规则，后者可覆盖前者；Git 只读 `.gitignore`） |
 | 工具专属 | 仅接受显式 `--tool-specific TOOL:SKILL` 声明的实际 skill 目录，且含 `SKILL.md`；名称必须是非隐藏的单个目录名，不能与真源或其他工具中的条目重名 |
 | 检查边界 | 顶层点开头项（如 `.git`、Codex 管理的 `.system`）作为元数据排除检查；其他非隐藏 Codex skill 不自动豁免 |
 

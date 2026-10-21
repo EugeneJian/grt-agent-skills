@@ -13,6 +13,7 @@
 !README.md
 !.gitignore
 !.ignore
+!.skill-tools
 # 说明: pi 等 Agent Skills 扫描器会叠加读取 .gitignore/.ignore/.fdignore,
 # .ignore 中的否定规则可重新放行安装器管理的第三方 skill 目录供扫描;
 # Git 本身不读 .ignore, 第三方 skill 仍不入库。

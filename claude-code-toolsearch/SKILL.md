@@ -1,6 +1,6 @@
 ---
 name: claude-code-toolsearch
-description: Claude Code 排障常识：ToolSearch 关键词搜索搜不到核心工具（Bash/Read/Write/Edit/Agent）不代表工具被移除，须用 select: 精确加载。当遇到 "No matching deferred tools found"、怀疑工具缺失/被禁用、或准备排查 settings/managed-settings 前先读本 skill。仅适用于 Claude Code；Pi/Codex 无此机制。
+description: 'Claude Code 排障常识：ToolSearch 关键词搜索搜不到核心工具（Bash/Read/Write/Edit/Agent）不代表工具被移除，须用 select: 精确加载。当遇到 "No matching deferred tools found"、怀疑工具缺失/被禁用、或准备排查 settings/managed-settings 前先读本 skill。仅适用于 Claude Code；Pi/Codex 无此机制。'
 ---
 
 # Claude Code 工具发现：select: 精确加载（防误判）

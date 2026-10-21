@@ -5,5 +5,9 @@
 !feishu-lark/
 !feishu-lark/**
 
+# 分发清单（.skill-tools）声明 claude-code-toolsearch 仅分发 Claude Code：
+# 在 .gitignore 白名单之后重新忽略，pi 扫描真源时不再加载（Git 不读本文件，仍入库同步）
+claude-code-toolsearch/
+
 !shipment-maintenance/
 !shipment-maintenance/**

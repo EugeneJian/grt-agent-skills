@@ -1,0 +1,5 @@
+# 工具分发清单：声明 skill 分发到哪些工具（claude、codex、pi；pi=直接扫描真源可见）。
+# 未列出的 skill 默认分发到 claude、codex 且对 pi 可见。
+# 对 pi 隐藏的 skill 必须同时在 .gitignore/.ignore/.fdignore 链路中被忽略；审计会双向校验。
+# claude-code-toolsearch 仅适用于 Claude Code 的 ToolSearch/select: 机制，不分发给其他 agent。
+claude-code-toolsearch: claude
