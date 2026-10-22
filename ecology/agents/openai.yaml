@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ecology"
+  short_description: "Ecology product discovery and system configuration"
+  default_prompt: "使用 $ecology 为澳洲 MINA 配置 10 kW / 35 kWh 系统，列出组件、数量和待确认项。"
