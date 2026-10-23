@@ -1,6 +1,6 @@
 # GRT Agent Skills · 同步与 SSOT 部署指南
 
-团队 skill 的多机同步与分发方案。共享 skill 的唯一真源（SSOT）是 `~/.agents/skills/`；Git 同步本仓库纳管的 skill（`feishu-nav`、`sql`、`shipment-maintenance`、`feishu-lark`），安装器独立管理 CLI 本体等其他第三方内容。
+团队 skill 的多机同步与分发方案。共享 skill 的唯一真源（SSOT）是 `~/.agents/skills/`；Git 同步本仓库纳管的 skill（`feishu-nav`、`sql`、`shipment-maintenance`、`feishu-lark`、`ecology`），安装器独立管理 CLI 本体等其他第三方内容。
 
 ## 架构
 
@@ -17,6 +17,9 @@
 │   └── tests/
 ├── feishu-lark/                          ← 本 Git 仓库纳管（lark-cli 包装 skill）
 │   └── SKILL.md                          （lark-cli CLI 本体由 npm 单独安装）
+├── ecology/                              ← Ecology API/MCP configuration entry
+│   ├── SKILL.md
+│   └── references/sources.md
 └── claude-code-toolsearch/               ← 本 Git 仓库纳管（Claude Code 排障常识）
     └── SKILL.md                          （仅 Claude Code 适用，不分发给其他 agent）
 
@@ -40,8 +43,14 @@
 
 | 通道 | 内容 | 方式 |
 |---|---|---|
-| Git | `feishu-nav`、`sql`、`shipment-maintenance`、`feishu-lark`、`claude-code-toolsearch`、README、忽略规则与 `.skill-tools` 分发清单 | 公开仓库 `EugeneJian/grt-agent-skills`（面向 Growatt 团队分发） |
+| Git | `feishu-nav`、`sql`、`shipment-maintenance`、`feishu-lark`、`claude-code-toolsearch`、`ecology`、README、忽略规则与 `.skill-tools` 分发清单 | 公开仓库 `EugeneJian/grt-agent-skills`（面向 Growatt 团队分发） |
 | 安装器 | `lark-cli` CLI 本体及其他第三方 skill | 按各自官方安装/更新说明维护，不提交到本仓库 |
+
+## Ecology configuration Skill
+
+Use [`ecology/SKILL.md`](ecology/SKILL.md) as the shared `$ecology` entry for Growatt system selection, component quantities and PN revalidation through the existing API/MCP. It loads the maintained `ecology-configurator` workflow from the connected MCP resource, an available AI-Copilot checkout, or its GitHub source. The [source map](ecology/references/sources.md) explains ownership and transport.
+
+This repository owns the portable entry; AI-Copilot owns the workflow and the connected service owns current published rules and candidates. No PN catalog or factory mapping is copied here. The entry uses the same Claude/Codex link setup below; pi scans the shared source. Installing the Skill does not install an MCP server, create an API Key or authorize production changes. Reopen the host session to discover `$ecology`; GitHub publication is a separate operation.
 
 ## 新电脑部署
 

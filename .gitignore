@@ -10,6 +10,8 @@
 !feishu-lark/**
 !claude-code-toolsearch/
 !claude-code-toolsearch/**
+!ecology/
+!ecology/**
 !README.md
 !.gitignore
 !.ignore
