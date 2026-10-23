@@ -9,17 +9,17 @@ Answer at the requested depth from current Ecology results: a product list, mode
 
 ## Choose the connection once
 
-Default to the cloud Streamable HTTP endpoint `https://feishu.myshine.online/api/v1/ecology/mcp`. Codex and Pi connect directly: no local connector, Node process or repository checkout is required. Initial setup is in the [Codex/Pi quickstart reference](references/sources.md#cloud-setup-for-codex-and-pi).
+Default to the cloud Streamable HTTP endpoint `https://feishu.myshine.online/api/v1/ecology/mcp` with employee Feishu OAuth. Codex and Pi connect directly, without a local adapter. The direct HTTP API at `https://feishu.myshine.online/api/v1/ecology` is available for an explicitly chosen API integration using an authorized application Key or a host-managed employee OAuth token for the shared Ecology resource. [Sources and transport](references/sources.md) maps the same nine operations across both routes.
 
-Preserve an explicit connection or authentication choice. Otherwise prefer employee Feishu OAuth through cloud MCP, reusing an existing authenticated connection when available. Use an existing API Key only for an explicitly selected third-party integration or when the user chooses Key access. Identify the mode from non-secret host connection metadata and state it once; the tool name or a successful response alone does not identify the mode. If the mode is hidden, say it is unverified instead of claiming OAuth.
+Preserve an explicit connection or authentication choice. Otherwise reuse an existing employee Feishu OAuth cloud MCP connection; if none exists, follow the [cloud setup](references/sources.md#cloud-setup-for-codex-and-pi). For direct API work, use only a credential already authorized for that route. Do not extract tokens from an MCP host for HTTP API, create or retrieve a Key merely to change transport, or switch identities after a denial. Identify the mode from non-secret host connection metadata and state it once; a tool name or successful response alone does not prove OAuth.
 
-If OAuth needs setup or renewed sign-in, report that requirement once using the [connection reference](references/sources.md); do not silently use a stored Key. Let the host refresh OAuth normally. Do not repeatedly ask for an authentication choice on each operation, change host credentials, or switch identities after a grant denial. Keep the same authorized connection for the task.
+If the selected route needs setup or renewed sign-in, report that requirement once using the [connection reference](references/sources.md); do not silently switch credentials or routes. Let the host refresh OAuth normally. Do not repeatedly ask for an authentication choice on each operation, change host credentials, or switch identities after a grant denial. Keep the same authorized connection for the task.
 
 ## Load the workflow once
 
 Use the first accessible source, preserving the user's chosen server and transport:
 
-1. With a connected Ecology MCP server, read its `ecology://workflow` resource.
+1. With a connected cloud Ecology MCP server, read its `ecology://workflow` resource.
 2. With an AI-Copilot checkout, read `applications/cockpit/tools/ecology-mcp/skills/ecology-configurator/SKILL.md` from that checkout. Use the task's known checkout or `ECOLOGY_REPO_ROOT`, if set; do not search unrelated private directories.
 3. Otherwise read the [canonical GitHub workflow](https://github.com/EugeneJian/AI-Copilot/blob/main/applications/cockpit/tools/ecology-mcp/skills/ecology-configurator/SKILL.md) through an available GitHub reader or authenticated fetch. Record the returned revision; do not treat the default branch as proof of production availability.
 
@@ -31,7 +31,7 @@ Do not combine contradictory editions or silently fall back to old rules. If the
 
 Follow the loaded workflow's task-depth routing. A simple product/model question must not become a full configuration or a catalog-wide model scan. Default to information and component quantities. Call material lookup, enable material resolution or verify PNs only when the user explicitly requests PN/material codes or a BOM containing them; an ordinary BOM request does not imply PN work. Do not ask about COO, meter ownership or PN choices for a catalog overview.
 
-Reuse same-input, same-version results within the task, including empty lists. For a country/market model list, use the workflow's `ecology_market_models` operation directly with the exact market; no portfolio or per-card scan is needed. A returned catalog card is not proof of model availability; a selectable model is not certification or sales approval. If the connected service lacks the batch operation, report that gap rather than scanning every card. Stop the current batch on 429; do not wait and resume a broad scan by default.
+Reuse same-input, same-version results within the task, including empty lists. For a country/market model list, use the workflow's `ecology_market_models` operation (or `GET /market-models` in API mode) directly with the exact market; no portfolio or per-card scan is needed. A returned catalog card is not proof of model availability; a selectable model is not certification or sales approval. If the connected service lacks the batch operation, report that gap rather than scanning every card. Stop the current batch on 429; do not wait and resume a broad scan by default.
 
 ## Capture configuration intent
 
@@ -53,6 +53,6 @@ Use returned progress, unresolved explanations and selection checks. State exact
 
 ## Access and recovery
 
-Use existing authorized API/MCP credentials without printing them. A Skill does not configure credentials or grant access. If no transport is connected, use the setup reference and report the missing connection; never scrape the Key administration UI or create a test Key automatically.
+Use existing authorized API/MCP credentials without printing them. Direct HTTP calls use `Authorization: Bearer` with an application Key from the host secret environment or a host-managed employee OAuth token for the shared Ecology resource. Never place credentials in a URL, Skill file, command argument or output. A Skill does not configure credentials or grant access. If the chosen route is unavailable, use the setup reference and report the missing dependency; never scrape the Key administration UI or create a test Key automatically.
 
 For rejected inputs, use field-level issues. On a version conflict, refresh the indicated resources and review changed facts before repeating the evaluation; do not merely replace hashes. Keep partial results honest. For OAuth expiry, let the host refresh or request renewed sign-in once; grant failures and Key issues require the existing integration contact. On a rate limit, report Retry-After and stop the current batch; do not automatically resume a broad scan. No personal saved selection, order, deployment or remote write is implied by a configuration request.
