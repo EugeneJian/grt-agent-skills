@@ -1,6 +1,6 @@
 ---
 name: feishu-nav
-description: 古瑞瓦特个人工作导航与核心项目资源入口（通用 Agent Skill，适配 pi/Claude Code/Codex 等支持 Agent Skills 规范的工具）。当用户提到「导航」「导航表」「我的导航」、要查看/增删导航条目、刷新 Last update，或要查项目简报、能源互联专项简报、研发下单指引、智云产品说明书、Ecology 产品卡片等核心工作表时使用。包含各资源的 token 直达坐标，支持跨会话、跨工具免搜索访问。
+description: 古瑞瓦特个人工作导航与核心项目资源入口（通用 Agent Skill，适配 pi/Claude Code/Codex 等支持 Agent Skills 规范的工具）。当用户提到「导航」「导航表」「我的导航」、要查看/增删导航条目、刷新 Last update，或要查项目简报、能源互联专项简报、研发下单指引、智云产品说明书、Ecology 产品卡片、Ecology 生命周期阶段与资源（五阶段活动及工具/数据源目录）等核心工作表时使用。包含各资源的 token 直达坐标，支持跨会话、跨工具免搜索访问。
 compatibility: 需要 Python 3 运行拓扑审计；业务查询需要 lark-cli 已安装、完成 config init，并以用户身份登录（lark-cli auth login --recommend；用 auth status 检查）。飞书文档访问权限跟随账号。
 license: MIT
 ---
@@ -26,7 +26,7 @@ license: MIT
 - URL：https://q02gj5lyidv.feishu.cn/wiki/EOxKwvjQ3igqIdkkdF3cW5SonYn?table=tblgHF305e99kLQz&view=vewrC7NlnR
 - base_token：`NNpAbmIera0mI2sVig2csRSbnNb` ｜ table_id：`tblgHF305e99kLQz` ｜ view_id：`vewrC7NlnR`
 - 字段：`功能`(text, fldaGujNal) ｜ `类型`(select, fldIULwk2G) ｜ `飞书链接`(text/url, flddwrn60E) ｜ `描述`(text, fldatCEF78) ｜ `Agent 指引`(text, fldxPMJC4o) ｜ `版本`(text, fldmHUe5vv) ｜ `Last update`(text, fld21cWyt6)
-- 类型选项：信息源 / 知识库 / 看板 / 台账
+- 类型选项：信息源 / 知识库 / 看板 / 台账 / 外部链接
 - **本 skill 涉及资源的领域 SSOT 声明维护在各条目的`描述`字段中**（如「产品生命周期以 Ecology 产品卡片为准」）：读取对应业务前先读导航，定位并核验原表；与已有权威源声明冲突时明确指出，不凭导航描述覆盖。导航修改在下次读取时生效，无需改 skill
 - **单资源操作协议（字段坐标、状态枚举、聚合口径、交叉验证规则）维护在各条目的`Agent 指引`字段**：处理该资源前先读对应条目指引，复用有效坐标直接拉取，不做例行 field-list 探索；指引缺失、字段映射冲突或查询报错时，仅对受影响的字段/表做只读核验。不能仅凭字段非空认定迁移完整；通用流程与异常处理见 [references/overview-protocol.md](references/overview-protocol.md)
 
@@ -49,6 +49,9 @@ license: MIT
 | 智云产品资料（说明书索引） | base `PsC8buShJajxp0sPQjncSoahn7g` ｜ 表：产品说明书&操作指南 `tblGmm6MTiOEnHls`、用户协议&隐私政策 `tblLdPGK92z74oe5` |
 | 深古研发下单指引链接汇总 | sheet `TBoRsI6vShSQUYthP9YcyfV2nhc`（8 产品线 16 份指引，D 列为文档 mention） |
 | Ecology 产品卡片与官方 Source | base `Iwb6bdAuuaiZTEsLslDcoL4pnpe` ｜ 产品卡片 `tblqZqBHRFxoOQIQ`（`生命周期` fldO4GeSSS）｜ 官方 Source `tblD8ivGCAGfNQDJ`（AI 数据源，视图 `vewV9cM8xs`） |
+| Ecology 生命周期阶段与资源 | base `SajBbNOpDaMwpSsK0yUcdr6Ence` ｜ 阶段工作清单 `tbl7GlArW31ZLngO`（五阶段总览 `vewMsyuTsP`、阶段看板 `vewx8yUYLC`）｜ 工具与数据源 `tblfTCKa0ox8Rx0G`（资源总览 `vewYMdMi6Q`） ｜ 导航条目 `reczz28PzJhSU4pz` |
+
+读取或维护「Ecology 生命周期阶段与资源」时，先读导航同名条目的最新「Agent 指引」，取得字段映射、阶段视图与关联规则。活动模板、资源目录及其关联直接在线维护；真实产品生命周期、项目进度、审批与业务事实继续按原始来源核验。
 
 ## SSOT 架构与审计
 
