@@ -16,13 +16,21 @@
 - base_token `NNpAbmIera0mI2sVig2csRSbnNb` ｜ table_id `tblgHF305e99kLQz` ｜ view_id `vewrC7NlnR`
 - 字段：`功能` ｜ `类型`（信息源/知识库/看板/台账） ｜ `飞书链接` ｜ `描述` ｜ `版本` ｜ `Last update`
 
-skill 内预置了各核心资源（项目简报、认证多维表格、能源互联专项简报、智云产品资料、研发下单指引、Ecology 产品卡片等）的 token 直达坐标，可跨会话、跨工具免搜索访问。完整坐标与业务口径见 [SKILL.md](SKILL.md)。
+skill 内预置了各核心资源（项目简报、认证多维表格、能源互联专项简报、智云产品资料、研发下单指引、Ecology 产品卡片、产品生命周期管理中台｜阶段与资源等）的 token 直达坐标，可跨会话、跨工具免搜索访问。完整坐标与业务口径见 [SKILL.md](SKILL.md)。
 
 ## 📖 使用说明
 
 ### 触发方式
 
-无需专门命令。对 AI 助手自然语言提到「导航」「导航表」「我的导航」，或要查看/增删导航条目、刷新 Last update，或要查项目简报、能源互联专项简报、研发下单指引、智云产品说明书、Ecology 产品卡片等核心工作表时，skill 自动生效。
+无需专门命令。对 AI 助手自然语言提到「导航」「导航表」「我的导航」，或要查看/增删导航条目、刷新 Last update，或要查项目简报、能源互联专项简报、研发下单指引、智云产品说明书、Ecology 产品卡片、产品生命周期管理中台｜阶段与资源等核心工作表时，skill 自动生效。
+
+### 产品生命周期中台维护入口
+
+- [产品生命周期管理中台｜阶段与资源](https://q02gj5lyidv.feishu.cn/base/SajBbNOpDaMwpSsK0yUcdr6Ence?table=tbl7GlArW31ZLngO&view=vew2MM9u3f)：按责任单位维护阶段活动和建设优先级。
+- [工具与数据源：责任归口与接入建设](https://q02gj5lyidv.feishu.cn/base/SajBbNOpDaMwpSsK0yUcdr6Ence?table=tblfTCKa0ox8Rx0G&view=vew2Eh6Cw4)。
+- [五阶段对照、缺失模块与责任单位建设建议](https://q02gj5lyidv.feishu.cn/docx/NvFUdwsHqoY6C1xKPh6cNYVsnsd)。
+
+旧称「Ecology 生命周期阶段与资源」仍定位到同一 Base；新旧名称使用相同坐标。动态要求和责任建议直接在线维护，字段协议从导航对应条目的最新「Agent 指引」读取。
 
 ### 前置条件
 

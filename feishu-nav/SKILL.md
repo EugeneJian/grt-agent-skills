@@ -1,8 +1,9 @@
 ---
 name: feishu-nav
-description: 古瑞瓦特个人工作导航与核心项目资源入口（通用 Agent Skill，适配 pi/Claude Code/Codex 等支持 Agent Skills 规范的工具）。当用户提到「导航」「导航表」「我的导航」、要查看/增删导航条目、刷新 Last update，或要查项目简报、能源互联专项简报、研发下单指引、智云产品说明书、Ecology 产品卡片、Ecology 生命周期阶段与资源（五阶段活动及工具/数据源目录）等核心工作表时使用。包含各资源的 token 直达坐标，支持跨会话、跨工具免搜索访问。
-compatibility: 需要 Python 3 运行拓扑审计；业务查询需要 lark-cli 已安装、完成 config init，并以用户身份登录（lark-cli auth login --recommend；用 auth status 检查）。飞书文档访问权限跟随账号。
+description: 古瑞瓦特个人工作导航与核心项目资源入口（通用 Agent Skill，适配 pi/Claude Code/Codex 等支持 Agent Skills 规范的工具）。当用户提到「导航」「导航表」「我的导航」、要查看/增删导航条目、刷新 Last update，或要查项目简报、能源互联专项简报、研发下单指引、智云产品说明书、Ecology 产品卡片、产品生命周期管理中台｜阶段与资源（旧称 Ecology 生命周期阶段与资源，五阶段活动、责任单位、建设优先级及工具/数据源目录）等核心工作表时使用。包含各资源的 token 直达坐标，支持跨会话、跨工具免搜索访问。
 license: MIT
+metadata:
+  compatibility: 需要 Python 3 运行拓扑审计；业务查询需要 lark-cli 已安装、完成 config init，并以用户身份登录（lark-cli auth login --recommend；用 auth status 检查）。飞书文档访问权限跟随账号。
 ---
 
 # Growatt 个人工作导航
@@ -49,9 +50,10 @@ license: MIT
 | 智云产品资料（说明书索引） | base `PsC8buShJajxp0sPQjncSoahn7g` ｜ 表：产品说明书&操作指南 `tblGmm6MTiOEnHls`、用户协议&隐私政策 `tblLdPGK92z74oe5` |
 | 深古研发下单指引链接汇总 | sheet `TBoRsI6vShSQUYthP9YcyfV2nhc`（8 产品线 16 份指引，D 列为文档 mention） |
 | Ecology 产品卡片与官方 Source | base `Iwb6bdAuuaiZTEsLslDcoL4pnpe` ｜ 产品卡片 `tblqZqBHRFxoOQIQ`（`生命周期` fldO4GeSSS）｜ 官方 Source `tblD8ivGCAGfNQDJ`（AI 数据源，视图 `vewV9cM8xs`） |
-| Ecology 生命周期阶段与资源 | base `SajBbNOpDaMwpSsK0yUcdr6Ence` ｜ 阶段工作清单 `tbl7GlArW31ZLngO`（五阶段总览 `vewMsyuTsP`、阶段看板 `vewx8yUYLC`）｜ 工具与数据源 `tblfTCKa0ox8Rx0G`（资源总览 `vewYMdMi6Q`） ｜ 导航条目 `reczz28PzJhSU4pz` |
+| 产品生命周期管理中台｜阶段与资源（旧称 Ecology 生命周期阶段与资源） | base `SajBbNOpDaMwpSsK0yUcdr6Ence` ｜ 阶段工作清单 `tbl7GlArW31ZLngO`（默认维护：责任单位与建设优先级 `vew2MM9u3f`；五阶段总览 `vewMsyuTsP`、阶段看板 `vewx8yUYLC`）｜ 工具与数据源 `tblfTCKa0ox8Rx0G`（责任归口与接入建设 `vew2Eh6Cw4`、资源总览 `vewYMdMi6Q`）｜ 导航条目 `reczz28PzJhSU4pz` |
+| 产品生命周期管理中台五阶段对照与责任单位分析 | docx `NvFUdwsHqoY6C1xKPh6cNYVsnsd` ｜ 导航条目 `reczz28Qn07HNbxp`；分析建议，动态清单在上述 Base 维护 |
 
-读取或维护「Ecology 生命周期阶段与资源」时，先读导航同名条目的最新「Agent 指引」，取得字段映射、阶段视图与关联规则。活动模板、资源目录及其关联直接在线维护；真实产品生命周期、项目进度、审批与业务事实继续按原始来源核验。
+读取或维护「产品生命周期管理中台｜阶段与资源」时，先按导航条目 `reczz28PzJhSU4pz` 读取最新「Agent 指引」，取得字段映射、责任单位、建设优先级、阶段/责任视图与关联规则。旧称「Ecology 生命周期阶段与资源」沿用同一 Base、两张表和导航条目，不新建副本。阶段活动模板、责任建议、建设优先级、资源目录及其关联直接在线维护；真实产品生命周期、项目进度、正式职责、审批与业务事实继续按原始来源核验。
 
 ## SSOT 架构与审计
 
