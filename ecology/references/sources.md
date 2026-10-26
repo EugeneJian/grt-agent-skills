@@ -72,10 +72,10 @@ All paths are relative to the API base `https://feishu.myshine.online/api/v1/eco
 
 | HTTP | MCP tool | Capability | Required scope | Key inputs |
 | --- | --- | --- | --- | --- |
-| `GET /portfolio` | `ecology_portfolio` | Discover markets, products and follow-up operations authorized to this credential; aggregate coverage stays `market_required` and is browsing only. | `catalog:read` | `market` optional; omitted/`all` lists all authorized markets. |
+| `GET /portfolio` | `ecology_portfolio` | Discover the credential's `authorized_markets`, products and follow-up operations; aggregate coverage stays `market_required` and is browsing only. | `catalog:read` | `market` optional; omitted/`all` lists all authorized markets. |
 | `GET /products` | `ecology_products` | Search and page authorized product cards (categories, capabilities, lifecycle, rule coverage). A catalog card is not proof of local model availability. | `catalog:read` | `market`, `search`, `capability` optional; `offset`/`limit`. |
 | `GET /market-models` | `ecology_market_models` | One request listing selectable models (nameplate, power, exact country labels) for one exact market, using shared Web availability. Selectable is not sale, certification or order approval. | `catalog:read` | Exact `market` required; `search` optional; `offset > 0` needs `sku_version`. |
-| `GET /products/{product}` | `ecology_product` | One product's markets, documentation status and calculation coverage/bounds. | `catalog:read` | `product` ID from discovery; exact `market`. |
+| `GET /products/{product}` | `ecology_product` | One product's `selectable_markets`, documentation status and calculation coverage/bounds. | `catalog:read` | `product` ID from discovery; exact `market`. |
 | `GET /products/{product}/description` | `ecology_description` | Product introduction, features and official source links; prose is not market approval. | `catalog:read` | `product`, exact `market`; `locale` `en`/`zh-CN`. |
 | `GET /products/{product}/rules` | `ecology_rules` | Published configuration rules, sizing bounds and balcony scenarios/accessories; check rule admission before evaluating. | `catalog:read` | `product`, exact `market`. |
 | `GET /products/{product}/models` | `ecology_models` | Selectable nameplates for one product and market; returns `meta.sku.version` for later material work; an empty list is successful. | `catalog:read` | `product`, exact `market`; continuation needs `version` and `sku_version`. |
