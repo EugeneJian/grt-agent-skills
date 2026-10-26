@@ -117,10 +117,13 @@ Request body (JSON):
 | `phase` | `single` \| `three` | Standard families; from rule bounds. |
 | `power_kw`, `capacity_kwh` | number > 0 | Standard sizing; use values from rule bounds/schemes (`powers_kw`, `module_kwh` multiples). Misaligned sizing returns `no_match` / `outside_coverage`. |
 | `has_meter` | bool | MINA: omit when meter ownership is unknown. |
-| `component_ids` | string[] | Optional selectable components from rules. |
+| `component_ids` | string[] ≤50 | Optional selectable components from `rule_block` (`^[a-z][a-z0-9-]{0,79}$`). Do not combine with `accessory_ids`. |
+| `accessory_ids` | string[] ≤50 | Legacy opaque IDs `rule-` + 24 hex from `rules.components` for component-quantity families; MINA meter selection requires `has_meter: false`. |
 | `balcony` | object | NOAH/NEXA/AURA: `{channel: "offline", scenario?, values {key: number}, accessories?[]}` from rules; replaces phase/power/capacity. |
 | `resolve_materials` | bool | Explicit PN work only; needs `materials:read`. |
 | `coo` | `CN` \| `VN` \| `all` | With `resolve_materials`. |
+| `hide_z4` | bool | With `resolve_materials`; default false (Active/blank and Z4 retained); Z1 always excluded. |
+| `exclude_ecommerce` | bool | With `resolve_materials`; default true. |
 | `version` | 64-hex | **Required** for standard families (balcony families send `balcony` instead): catalog pin from the preceding read. |
 | `rules_version` | object | **Required** together with `version`: the full `meta.rules_version` object `{data, engine, runtime}` copied from the same read. A bare hash string is rejected. |
 | `sku_version` | 64-hex | Only with `resolve_materials: true`; from `models`. |
