@@ -1,6 +1,6 @@
 # Ecology API schema (service-derived)
 
-Field-level contract for the nine operations, transcribed from the connected service's own operation contract; the HTTP API and the cloud MCP tools expose the same shapes. The live service is authoritative: on any mismatch, trust the service response and report the drift so this file can be updated. Capture: 2026-10-26, deployed contract 1.29. Error `reason` values and the retryable transient code below come from contract 1.30, which is pending release; handle them when returned and fall back to `error.code`.
+Field-level contract for the nine operations, transcribed from the connected service's own operation contract; the HTTP API and the cloud MCP tools expose the same shapes. The live service is authoritative: on any mismatch, trust the service response and report the drift so this file can be updated. Capture: 2026-10-26, deployed contract 1.30, including the error `reason` values and retryable transient code below. `meta.lifecycle_source` comes from contract 1.31, pending release: until it is returned, discovery may report `is_eol: false` for cards that Web marks EOL, so treat card EOL as unknown.
 
 ## Common conventions
 
@@ -8,7 +8,7 @@ Field-level contract for the nine operations, transcribed from the connected ser
 - Exact market codes: `AE AT AU BE BG BR CA CH CL CN CO CY CZ DE DK EE ES FI FR GB GE GR HR HU IE IL IN IQ IS IT JO JP KR LT LU LV MT MX NA NG NL NO NZ PH PK PL PT RO SA SE SI SK TH TW US VN ZA`, plus regional `EUROPE` and `GENERIC`. `GLOBAL` is browsing-only.
 - Version pins are 64-char hex: `version` (catalog) and `sku_version` (SKU projection). Carry them across pages and into follow-up calls; `offset > 0` on model endpoints requires `sku_version`.
 - Pagination: `limit` defaults to and maxes at 4000; `offset` 0–10000; pages are bounded to 2 MiB (`meta.page_limited_by_bytes` marks a byte-truncated page; advance to `meta.offset + meta.limit`). A single oversized row returns 413 `response_too_large`.
-- Envelope: `{ "data": …, "meta": …, "request_id": <uuid> }`. Common `meta`: `generated_at`, `expires_at`, `language` (`en`/`zh-CN`), `version`, `rules_version {data, engine, runtime}`, `market_context? {kind, market, message, automatic_market_merge: false, approval: "not_assessed"}`, and for paged reads `total`, `offset`, `limit`, `requested_limit?`. Model-returning reads add `sku {version, expires_at}` and `models_status` (`ok`/`empty`).
+- Envelope: `{ "data": …, "meta": …, "request_id": <uuid> }`. Common `meta`: `generated_at`, `expires_at`, `language` (`en`/`zh-CN`), `version`, `rules_version {data, engine, runtime}`, `market_context? {kind, market, message, automatic_market_merge: false, approval: "not_assessed"}`, and for paged reads `total`, `offset`, `limit`, `requested_limit?`. Model-returning reads add `sku {version, expires_at}` and `models_status` (`ok`/`empty`). Portfolio, products and product add `lifecycle_source` (`sku_projection`: card EOL read from the published card mapping that Web uses; `unavailable`: mapping unreadable, EOL unknown).
 - Errors: `{error: {code, message, next_action, retryable, issues?, recovery?, reason?}, request_id}`. Branch on `code`, then on optional `reason`; never parse prose.
   - 400/422: fix the fields named in `issues[].path` (for example `/scheme_id`, `/component_ids/1`, `/balcony`); values are never echoed. Do not retry unchanged.
   - 401: credential missing, expired or revoked. 403 `forbidden`: `reason` `scope_missing` or `market_not_granted` needs an administrator grant (portfolio `endpoints[].required_scopes` shows current scopes); `origin_not_allowed` means call server-side.
@@ -35,7 +35,7 @@ Response `data`: `endpoint_access_meaning` (scope only); `endpoints[] {available
 | `offset` / `limit` | int | See pagination. |
 | `version` | 64-hex | Optional pin. |
 
-Response `data[]`: `id` (`[A-Za-z0-9_-]{1,80}`), `name`, `image_url`, `categories[]`, `capabilities[]`, `lifecycle {is_eol, is_new}`, `markets[]?`, `url`, `rule_coverage {calculation {status: partial|not_implemented|unavailable|market_required, kind, bounds?, schemes?}, documentation {status: available|not_recorded}}`.
+Response `data[]`: `id` (`[A-Za-z0-9_-]{1,80}`), `name`, `image_url`, `categories[]`, `capabilities[]`, `lifecycle {is_eol, is_new}` (card-level; trust `is_eol: false` only when `meta.lifecycle_source` is `sku_projection`), `markets[]?`, `url`, `rule_coverage {calculation {status: partial|not_implemented|unavailable|market_required, kind, bounds?, schemes?}, documentation {status: available|not_recorded}}`.
 
 ## GET /market-models (`ecology_market_models`)
 

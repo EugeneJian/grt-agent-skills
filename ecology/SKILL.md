@@ -46,7 +46,7 @@ Follow the canonical presentation contract. For configuration, give a compact re
 
 Distinguish a requested/default COO filter from verified component COO. If origin evidence is missing, label that component unresolved even when a default was requested. Do not use a remembered factory-to-PN mapping or choose the first of several candidates without a supported preference.
 
-Use returned progress, unresolved explanations and selection checks. State exactly which PNs were revalidated; `confirmed` is a current candidate match, not compatibility, certification, stock or order approval. Preserve `compatibility: unknown` and `orderable: false` when returned. Keep version pins and request IDs available, and revalidate close to downstream use.
+Card `lifecycle.is_eol` is card-level EOL. Report it as known only when `meta.lifecycle_source` is `sku_projection`; otherwise say EOL is unknown rather than active. PN material status (`Z4`, `Z1`) and one discontinued nameplate are not card EOL. Use returned progress, unresolved explanations and selection checks. State exactly which PNs were revalidated; `confirmed` is a current candidate match, not compatibility, certification, stock or order approval. Preserve `compatibility: unknown` and `orderable: false` when returned. Keep version pins and request IDs available, and revalidate close to downstream use.
 
 ## Access and recovery
 
