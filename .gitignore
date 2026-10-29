@@ -12,6 +12,9 @@
 !claude-code-toolsearch/**
 !ecology/
 !ecology/**
+!.github/
+!.github/workflows/
+!.github/workflows/ecology-docs.yml
 !README.md
 !.gitignore
 !.ignore
