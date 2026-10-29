@@ -48,9 +48,18 @@
 
 ## Ecology configuration Skill
 
-Use [`ecology/SKILL.md`](ecology/SKILL.md) as the shared `$ecology` entry for Growatt system selection, component quantities and PN revalidation through the existing API/MCP. The connected service is its only runtime source: it defaults to the direct HTTP API, falls back to cloud MCP when API access is not configured, and reads the deployed workflow from the MCP `ecology://workflow` resource; no Git repository is consulted. Per-endpoint capabilities are documented in the [source map](ecology/references/sources.md#api-endpoint-capabilities).
+Use [`ecology/SKILL.md`](ecology/SKILL.md) as the shared `$ecology` entry for Growatt product browsing, single-inverter selection, system quantities and PN revalidation through the existing API/MCP. The connected service is its only runtime source: it defaults to the direct HTTP API, falls back to cloud MCP when API access is not configured, and reads the deployed workflow from the MCP `ecology://workflow` resource; no Git repository is consulted. Per-endpoint capabilities are documented in the [source map](ecology/references/sources.md#api-endpoint-capabilities).
 
 This repository owns the portable entry; AI-Copilot owns the workflow and the connected service owns current published rules and candidates. No PN catalog or factory mapping is copied here. The entry uses the same Claude/Codex link setup below; pi scans the shared source. Installing the Skill does not install an MCP server, create an API Key or authorize production changes. Reopen the host session to discover `$ecology`; GitHub publication is a separate operation.
+
+Offline validation requires Python 3.9+ and PyYAML. From the repository root, run:
+
+```sh
+python3 -m pip install PyYAML==6.0.2
+python3 -m unittest discover -s ecology/tests -v
+```
+
+The Ecology-only CI runs these same checks on relevant pull requests and `main` pushes: Skill frontmatter, agent YAML, local Markdown links/anchors and JSON examples. It needs no credentials, local host layout, business data or API connection; it does not verify product rules or production behavior.
 
 ## 新电脑部署
 
