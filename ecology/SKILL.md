@@ -1,6 +1,6 @@
 ---
 name: ecology
-description: Browse Growatt products, select one inverter by market and rated kW, or configure systems through the Ecology API or MCP. Default to product information and component quantities; query or verify PN only when explicitly requested. Does not place orders, manage API Keys or maintain the server.
+description: Browse Growatt products, select one inverter by market and rated kW or one accessory unit by market and model, or configure systems through the Ecology API or MCP. Default to product information and component quantities; query or verify PN only when explicitly requested. Does not place orders, manage API Keys or maintain the server.
 ---
 
 # Ecology configuration
@@ -9,7 +9,7 @@ Answer at the requested depth from current Ecology results: a product list, mode
 
 ## Choose the connection once
 
-Default to the direct HTTP API at `https://ecology.growatt.com/api/v1/ecology`: it serves the company-domain contract 1.34. Preserve an explicitly configured connection and its route-specific credential; this update does not migrate host settings or assert that another deployment has the same contract. The host manages an authorized application Key (for example `ECOLOGY_API_TOKEN` in its secret environment) or an employee OAuth Bearer token for the shared Ecology resource. Call its HTTP paths without MCP tool or resource discovery; [Sources and transport](references/sources.md) maps the same nine operations, documents each endpoint's capability, scope and inputs, and links the field-level [API schema](references/api-schema.md). Use the cloud Streamable HTTP endpoint `https://ecology.growatt.com/api/v1/ecology/mcp` only for an explicitly chosen MCP connection or when direct API access is not configured.
+Default to the direct HTTP API at `https://ecology.growatt.com/api/v1/ecology`: it serves the company-domain contract 1.36. Preserve an explicitly configured connection and its route-specific credential; this update does not migrate host settings or assert that another deployment has the same contract. The host manages an authorized application Key (for example `ECOLOGY_API_TOKEN` in its secret environment) or an employee OAuth Bearer token for the shared Ecology resource. Call its HTTP paths without MCP tool or resource discovery; [Sources and transport](references/sources.md) maps the same nine operations, documents each endpoint's capability, scope and inputs, and links the field-level [API schema](references/api-schema.md). Use the cloud Streamable HTTP endpoint `https://ecology.growatt.com/api/v1/ecology/mcp` only for an explicitly chosen MCP connection or when direct API access is not configured.
 
 Preserve an explicit connection or authentication choice. Otherwise use an existing authorized direct API integration first; if none exists, reuse an existing employee Feishu OAuth cloud MCP connection or follow the [cloud setup](references/sources.md#cloud-setup-for-codex-and-pi). Use only a credential already authorized for the selected route. Do not extract tokens from an MCP host for HTTP API, create or retrieve a Key merely to change transport, or switch identities after a denial. Identify the mode from non-secret host connection metadata and state it once; a tool name or successful response alone does not prove OAuth.
 
@@ -32,7 +32,7 @@ Reuse same-input, same-version results within the task, including empty lists. F
 
 For one inverter, use `market_models` with the exact market, `selection_mode: "inverter_only"` and the requested positive `power_kw`; use `models` when the product ID is already known. Ask only for a missing market or rated kW. Each returned `selection: {kind: "inverter_only", quantity: 1}` is a separate alternative. Present alternatives without adding them into a BOM or silently choosing one. This workflow needs no battery capacity, system rules or evaluation. An unrelated system-rule gap does not block a valid single-inverter result. PN lookup remains an explicit follow-up.
 
-The [1.34 reference](references/api-schema.md#single-inverter-selection) explains capability versus availability, exact-power matching, empty results and pagination. Use the connected service's advertised capability; an older deployment without these inputs requires a supported connection, not fabricated quantities or an automatic credential switch.
+The [1.36 reference](references/api-schema.md#single-unit-selection) explains capability versus availability, exact-power matching, empty results and pagination. Use the connected service's advertised capability; an older deployment without these inputs requires a supported connection, not fabricated quantities or an automatic credential switch.
 
 ## Capture configuration intent
 

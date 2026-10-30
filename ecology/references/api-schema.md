@@ -1,8 +1,8 @@
 # Ecology API schema (service-derived)
 
-Field-level reference for company-domain contract **1.34.0**, synchronized on 2026-10-29 from the service owner's generated OpenAPI and verified HTTP/MCP behavior. The connected service remains authoritative. Source OpenAPI SHA-256: `fa824776aa81d217b337a8d15be594af76ddc1398af46656bca04d362642709a`. This is a reference projection, not an independent rule source. All nine operations use the same schemas over HTTP and cloud MCP.
+Field-level reference for company-domain contract **1.36.0**, synchronized on 2026-10-30 from the service owner's generated OpenAPI and verified HTTP/MCP behavior. The connected service remains authoritative. Source OpenAPI SHA-256: `87b24fbcb02b8bbb0cf27e058c2d7f73bf1dc136ad55cf6507a0b12c5c5d76dc`. This is a reference projection, not an independent rule source. All nine operations use the same schemas over HTTP and cloud MCP.
 
-Use `https://ecology.growatt.com/api/v1/ecology` with credentials authorized for that route. Preserve an explicitly configured alternative deployment and check its advertised inputs; a matching paging shape alone does not prove support for 1.34 single-inverter selection. This document describes the current company-domain contract, not legacy request forms.
+Use `https://ecology.growatt.com/api/v1/ecology` with credentials authorized for that route. Preserve an explicitly configured alternative deployment and check its advertised inputs; a matching paging shape alone does not prove support for 1.36 single-unit selection selection. This document describes the current company-domain contract, not legacy request forms.
 
 ## Common conventions
 
@@ -18,11 +18,13 @@ Use `https://ecology.growatt.com/api/v1/ecology` with credentials authorized for
   - 409 `version_changed`/`sku_version_changed`: read `error.recovery.stale`, refresh the indicated resources and review changed facts; do not merely replace pins. They occur only when data the product depends on changed. 409 `list_changed`: restart that list. 413: request less detail. 429: stop the batch and honor `Retry-After`.
   - 503: retry only when `retryable` is true (`service_temporarily_unavailable`, `database_temporarily_unavailable`, `request_timeout`), after `Retry-After`, within a bounded budget. Otherwise report the code and `request_id`.
 
-## Single-inverter selection
+## Single-unit selection
 
 For a country and rated power, call `GET /market-models?market=AU&selection_mode=inverter_only&power_kw=5` or `ecology_market_models({"market":"AU","selection_mode":"inverter_only","power_kw":5})`. When a product ID is known, use its `/models` route or `ecology_models` with the same fields. Both need only `catalog:read` and do not query PNs.
 
-Each returned row's `selection: {kind: "inverter_only", quantity: 1}` is an independent alternative, never an additive BOM line. Use the returned rating exactly; do not round, substitute the nearest rating or infer a missing rating from its name. These requests do not take battery capacity, phase, a system scheme or rule pins and do not call `evaluate`. Pending system rules cannot block an independently supported single-inverter candidate.
+Each returned row's `selection: {kind: "inverter_only", quantity: 1}` is an independent alternative, never an additive BOM line.
+
+Cards for monitoring hardware, GroHome, ESS accessories and the named RISE/MASE/ENSE and GroPlug-X cards advertise `unit_selection: {kind: "unit_only", quantity: 1}` instead. Query them with `selection_mode=unit_only` by country and model; no `power_kw` is needed, and an optional `power_kw` still matches exactly. A mode returns rows only for cards whose `unit_selection.kind` matches; other cards return a successful empty list with `models_message`. No accessory sizing is implied. Use the returned rating exactly; do not round, substitute the nearest rating or infer a missing rating from its name. These requests do not take battery capacity, phase, a system scheme or rule pins and do not call `evaluate`. Pending system rules cannot block an independently supported single-inverter candidate.
 
 `unit_selection` on a card is capability, while `selectable_markets` and model responses describe current availability. Non-EOL on-grid PV, battery-ready, hybrid, off-grid and AC-coupled inverter categories are eligible; EOL, batteries, accessories and complete all-in-one systems are excluded from this mode. A data gap remains empty or unavailable, not fabricated compatibility. Successful empty results are not a retry signal; `no_matching_models` may mean the exact kW filter has no match, while `no_models_in_market` means no records in scope. Missing required kW returns 400 `invalid_request` with issue `inverter_power_required` at `/power_kw`.
 
@@ -45,7 +47,7 @@ Response `data`: `endpoint_access_meaning` (scope only); `endpoints[] {available
 | `capability` | enum | `New` \| `VPP` \| `Smart scheduling` \| `ShinePhone2.0` \| `Grominder` (Chinese values retained as legacy aliases). |
 | `page_token` / `limit` | string / int | See pagination. |
 
-Response `data[]`: summary cards `{id, name, categories[], capabilities[], lifecycle {is_eol, is_new}, selectable_markets, documentation_status, calculation_status, unit_selection?}`. `selectable_markets` is the granted material-backed selection scope (`null` means unknown). Optional `unit_selection: {kind: "inverter_only", quantity: 1}` declares the standalone entry independently of system calculation; it does not prove current candidates. Read details, `url`, `image_url`, `rule_coverage` and `next_actions` from the product resource.
+Response `data[]`: summary cards `{id, name, categories[], capabilities[], lifecycle {is_eol, is_new}, selectable_markets, documentation_status, calculation_status, unit_selection?}`. `documentation_status` is the reviewed rule-guide status only; official manuals and datasheets are in `description.official_documents`. `unit_selection.kind` is `inverter_only` or `unit_only`. `selectable_markets` is the granted material-backed selection scope (`null` means unknown). Optional `unit_selection: {kind: "inverter_only", quantity: 1}` declares the standalone entry independently of system calculation; it does not prove current candidates. Read details, `url`, `image_url`, `rule_coverage` and `next_actions` from the product resource.
 
 ## GET /market-models (`ecology_market_models`)
 
@@ -54,10 +56,10 @@ Response `data[]`: summary cards `{id, name, categories[], capabilities[], lifec
 | `market` | enum | **Required**, exact market. |
 | `search` | string ≤100 | Matches products/aliases/nameplates. |
 | `page_token` / `limit` | string / int | No pins (`meta.sku.version` is the market-wide view, diagnostic only). |
-| `selection_mode` | `"inverter_only"` | Optional; requires `power_kw`. |
-| `power_kw` | number > 0 | Exact rated kW; required with `inverter_only`, otherwise optional. HTTP query numbers are parsed; MCP uses numeric JSON. |
+| `selection_mode` | `"inverter_only"` \| `"unit_only"` | Optional; the card `unit_selection.kind`. `inverter_only` requires `power_kw`. |
+| `power_kw` | number > 0 | Exact rated kW; required with `inverter_only`, optional otherwise (including `unit_only`). HTTP query numbers are parsed; MCP uses numeric JSON. |
 
-Response `data[]`: `product_id`, `product_name`, `nameplate`, `power_kw` (number \| null), `countries[]` (exact labels), `association_basis` (`series_country` \| `nameplate_country`; provenance, not qualification), `country_options[]? {country, country_label?, market_code?}`, optional `selection {kind: "inverter_only", quantity: 1}`. `meta` adds `sku`, `models_status`, `models_message` and, for an empty result, `models_empty_reason` (`no_matching_models`: no rows match the search, exact power or selection mode; keep the requested scope unless the user changes it; `no_models_in_market`: no records in this scope).
+Response `data[]`: `product_id`, `product_name`, `nameplate`, `power_kw` (number \| null), `countries[]` (exact labels), `association_basis` (`series_country` \| `nameplate_country`; provenance, not qualification), `country_options[]? {country, country_label?, market_code?}`, optional `selection {kind: "inverter_only"|"unit_only", quantity: 1}`. `meta` adds `sku`, `models_status`, `models_message` and, for an empty result, `models_empty_reason` (`no_matching_models`: no rows match the search, exact power or selection mode; keep the requested scope unless the user changes it; `no_models_in_market`: no records in this scope).
 
 ## GET /products/{product} (`ecology_product`)
 
@@ -78,7 +80,9 @@ Response `data`: card detail fields including optional `unit_selection`, plus `n
 | `locale` | `en` \| `zh-CN` | — |
 | `version` | 64-hex | Optional pin. |
 
-Response `data`: `name`, `product`, `market`, `status: available|not_recorded`, `scope: "product_reference_not_market_approval"`, `introduction`, `sections[]`, `features[]`, `content.modules[]` (`introduction`, `online-resources` items `{label,url}`, `rules` with `variants[]`), `maintenance {rule_version, updated_at}`, `source_url`, `sources[]`.
+Response `data` (plain text, one copy of each field): `name`, `product`, `market`, `status: available|not_recorded`, `scope: "product_reference_not_market_approval"`, `title` (nullable), `introduction` (nullable), `sections[]`, `features[]`, `variants[] {id, title, introduction, sections[]}`, `sources[] {label, url}`, `official_documents {status, source_url, observed_at, expires_at, documents[] {title, url, kind, language_hint, version_hint}}`, `maintenance {rule_version, updated_at}`, `source_url`. `meta` adds `knowledge_version` and `documents_version`. There is no `content` field and no diagram source since 1.36; diagrams are Web-only.
+
+`official_documents.status`: `available` (links listed), `no_links` (page checked, none listed), `pending_review` (page read failed or unrecognized), `stale` (evidence expired), `unavailable` (publication unreadable), `not_recorded` (no source for the card). Only `available` returns links. Listing a document does not establish market approval, applicability or compatibility.
 
 ## GET /products/{product}/rules (`ecology_rules`)
 
@@ -98,10 +102,10 @@ Response `data` (key fields): `product`, `market`, `status`, `orderable: false`,
 | `market` | enum | **Required**, exact market. |
 | `page_token` / `limit` | string / int | See common pagination. |
 | `version` | 64-hex | Optional product pin. |
-| `selection_mode` | `"inverter_only"` | Optional; requires `power_kw`. |
-| `power_kw` | number > 0 | Exact rated kW; required with `inverter_only`, otherwise optional. HTTP query numbers are parsed; MCP uses numeric JSON. |
+| `selection_mode` | `"inverter_only"` \| `"unit_only"` | Optional; the card `unit_selection.kind`. `inverter_only` requires `power_kw`. |
+| `power_kw` | number > 0 | Exact rated kW; required with `inverter_only`, optional otherwise (including `unit_only`). HTTP query numbers are parsed; MCP uses numeric JSON. |
 
-Response `data[]`: `nameplate`, `power_kw`, `countries[]`, `association_basis`, `country_options[]?`, optional `selection {kind: "inverter_only", quantity: 1}`. `meta` adds `sku {version, expires_at}`, `models_status` (`ok`/`empty`), `models_message` and `models_empty_reason?`; an empty list is a successful result.
+Response `data[]`: `nameplate`, `power_kw`, `countries[]`, `association_basis`, `country_options[]?`, optional `selection {kind: "inverter_only"|"unit_only", quantity: 1}`. `meta` adds `sku {version, expires_at}`, `models_status` (`ok`/`empty`), `models_message` and `models_empty_reason?`; an empty list is a successful result.
 
 ## GET /products/{product}/materials (`ecology_materials`)
 
