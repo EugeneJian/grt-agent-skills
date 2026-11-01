@@ -1,8 +1,8 @@
 # Ecology API schema (service-derived)
 
-Field-level reference for company-domain contract **1.38.0**, synchronized on 2026-10-31 from the service owner's generated OpenAPI and verified HTTP/MCP behavior. The connected service remains authoritative. Source OpenAPI SHA-256: `e52081e446d839b2f1e040f8adc1a8c704ef430b3d1011ba72a66ddddcfa3fbd`. This is a reference projection, not an independent rule source. All nine operations use the same schemas over HTTP and cloud MCP.
+Field-level reference for company-domain contract **1.39.0**, synchronized on 2026-10-31 from the service owner's generated OpenAPI and verified HTTP/MCP behavior. The connected service remains authoritative. Source OpenAPI SHA-256: `87ff0a708ae2a47174eac58cda0091e1c576a996d4afb3fd32f204e522e31774`. This is a reference projection, not an independent rule source. All nine operations use the same schemas over HTTP and cloud MCP.
 
-Use `https://ecology.growatt.com/api/v1/ecology` with credentials authorized for that route. Preserve an explicitly configured alternative deployment and check its advertised inputs; a matching paging shape alone does not prove support for 1.38 single-unit selection. This document describes the current company-domain contract, not legacy request forms.
+Use `https://ecology.growatt.com/api/v1/ecology` with credentials authorized for that route. Preserve an explicitly configured alternative deployment and check its advertised inputs; a matching paging shape alone does not prove support for the current inputs or specification transport. This document describes the current company-domain contract, not legacy request forms.
 
 ## Common conventions
 
@@ -82,9 +82,33 @@ Response `data`: card detail fields including optional `unit_selection`, plus `n
 
 `zh-CN` returns the Chinese text that Web shows, from the same product knowledge revision; a missing Chinese field falls back to English. English output omits feature groups that exist only in Chinese (some China-site cards); request `zh-CN` for them. Official document titles keep their original language.
 
-Response `data` (plain text, one copy of each field): `name`, `product`, `market`, `status: available|not_recorded`, `scope: "product_reference_not_market_approval"`, `title` (nullable), `introduction` (nullable), `sections[]`, `features[]`, `variants[] {id, title, introduction, sections[]}`, `sources[] {label, url}`, `official_documents {status, source_url, observed_at, expires_at, documents[] {title, url, kind, language_hint, version_hint}}`, `maintenance {rule_version, updated_at}`, `source_url`. `meta` adds `knowledge_version` and `documents_version`. There is no `content` field and no diagram source since 1.36; diagrams are Web-only.
+Response `data` (product text stays plain text, one copy of each field): `name`, `product`, `market`, `status: available|not_recorded`, `scope: "product_reference_not_market_approval"`, `title` (nullable), `introduction` (nullable), `sections[]`, `features[]`, `variants[] {id, title, introduction, sections[]}`, `sources[] {label, url}`, `official_documents {status, source_url, observed_at, expires_at, documents[] {title, url, kind, language_hint, version_hint}}`, `maintenance {rule_version, updated_at}`, `source_url`, optional structured `specifications` as below. `meta` adds `knowledge_version` and `documents_version`. There is no `content` field and no diagram source since 1.36; diagrams are Web-only.
 
 `official_documents.status`: `available` (links listed), `no_links` (page checked, none listed), `pending_review` (page read failed or unrecognized), `stale` (evidence expired), `unavailable` (publication unreadable), `not_recorded` (no source for the card). Only `available` returns links. Listing a document does not establish market approval, applicability or compatibility.
+
+### Leaflet specifications
+
+`description.specifications` and MCP `ecology_description` use the same generic transport. Read the field descriptors and source-labelled model tables returned for the selected product and exact market; do not maintain a second list of product attributes in the Skill.
+
+| Field | Shape and interpretation |
+| --- | --- |
+| `status` | `available`, `not_recorded`, `stale` or `unavailable`; applies only to this optional module. Valid product prose, official documents and independent configuration coverage remain usable. |
+| `schema_version` / `schema_ref` | `schema_version: 1` is the fixed envelope version. Published specifications bind an exact immutable 64-hex `schema_ref`; an absent module can omit the reference. A changed default Schema does not repin a card. |
+| `product_type` | Descriptive product type, or `null` when no applicable data is available; it does not establish configuration behavior. |
+| `fields[]` | `{path, group, group_label: {en, "zh-CN"}, label: {en, "zh-CN"}, unit: string\|null, display_kind?: scalar\|list\|range}`. Labels, units, groups and value display come from the exact published Schema. |
+| `families[]` | `{id, source, markets[], models[], certifications, footnotes?[]}`: one table of one leaflet, kept separate from other sources. |
+| `families[].source` | `{title, edition: string\|null, status: final\|preliminary\|provisional, url, observed_at}`. Retain original title, edition, status and official URL; do not invent an edition when it is `null`. |
+| `families[].models[]` | `{model, <attribute groups>}`. `model` is the printed column header. Group fields hold primitive string/number/boolean/null values or flat lists of them; use `fields[].path` to locate and render them. Supported new attributes/groups require no client field dictionary. |
+| `families[].certifications` | `{declared: string[]\|null, note?: string\|null}`: leaflet declarations, not market approval. Official certificate files remain in `official_documents`. |
+| `families[].footnotes` | Original table footnotes that qualify the values; preserve their conditions verbatim. |
+
+Official sources decide a card's models; a family's `markets` is the leaflet's reference scope, not a sales grant. Sales availability per market comes only from `models`/`market-models`; a printed model without a SAP match stays listed as official with unconfirmed availability. Use only tables whose `markets` contains the exact requested market or `global`; keep global tables labelled as reference. `EUROPE` does not automatically supply `DE`, and a CN table does not supply AU. `GLOBAL` is a Web browsing scope, not an API/MCP market. Do not merge values across regional or global sources, model names, editions or HU/HU2 variants.
+
+Keep source-language strings, including Chinese leaflet values, as returned even when `locale=en`. Preserve `null` as unknown/not stated, distinct from zero, false or an explicitly empty list. Format `range` as two endpoints and `list` as listed items; preserve numeric values and units without rounding. Keep preliminary/provisional labels. Do not infer a rated value from a model name or a source footnote.
+
+The editable attribute Schema belongs to the service owner's Git source; D1 stores immutable published copies. The Skill consumes the response's exact-version public projection and does not edit Schema or source facts. Source SHA-256 values, SAP nameplate aliases, private conflicts, internal review data and lifecycle readback snapshots are not public specification fields. Product `lifecycle` remains on `products`/`product`, with its existing `meta.lifecycle_source`; it is not duplicated in `description`. An `EOL` condition inside a battery-test footnote does not mark the product card EOL.
+
+Use `meta.knowledge_version` to identify the Knowledge publication supplying specifications. Catalog, Schema, Knowledge and executable `rules_version` identify different facts; a rules fingerprint is not the API contract version or the specification publication. Supported new attributes can arrive through Schema and Knowledge publication without a Worker/Web/MCP deployment; new value/widget types or business behavior need a service upgrade. Availability or a leaflet declaration does not establish compatibility, certification, stock or orderability.
 
 ## GET /products/{product}/rules (`ecology_rules`)
 
