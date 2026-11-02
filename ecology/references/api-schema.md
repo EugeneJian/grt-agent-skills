@@ -1,6 +1,6 @@
 # Ecology API schema (service-derived)
 
-Field-level reference for company-domain contract **1.39.0**, synchronized on 2026-10-31 from the service owner's generated OpenAPI and verified HTTP/MCP behavior. The connected service remains authoritative. Source OpenAPI SHA-256: `87ff0a708ae2a47174eac58cda0091e1c576a996d4afb3fd32f204e522e31774`. This is a reference projection, not an independent rule source. All nine operations use the same schemas over HTTP and cloud MCP.
+Field-level reference for company-domain contract **1.40.0**, synchronized on 2026-11-02 from the service owner's generated OpenAPI and verified HTTP/MCP behavior. The connected service remains authoritative. Source OpenAPI SHA-256: `c60e9d783458c2901c7760e1035d627a1a5ab1275d98a76971bf40bc22873811`. This is a reference projection, not an independent rule source. All nine operations use the same schemas over HTTP and cloud MCP.
 
 Use `https://ecology.growatt.com/api/v1/ecology` with credentials authorized for that route. Preserve an explicitly configured alternative deployment and check its advertised inputs; a matching paging shape alone does not prove support for the current inputs or specification transport. This document describes the current company-domain contract, not legacy request forms.
 
@@ -46,6 +46,8 @@ Response `data`: `endpoint_access_meaning` (scope only); `endpoints[] {available
 | `search` | string ≤100 | Optional text search. |
 | `capability` | enum | `New` \| `VPP` \| `Smart scheduling` \| `ShinePhone2.0` \| `Grominder`. The Chinese term aliases `新品` and `智能调度` are accepted; responses use the English value. |
 | `page_token` / `limit` | string / int | See pagination. |
+
+Lists only products available in the market: each has at least one current, non-EOL PN-backed model there (Z4 stock-depletion PN count), the same view as Web and `market-models`. EOL cards and products without PN are omitted. 503 `data_unavailable` means the PN view is unavailable (never read it as an empty market); 404 `market_not_available` means the market has no current PN coverage. `meta.sku.version` is the market-wide view, diagnostic only. An unlisted product stays readable by id; its `next_actions` marks `models` and `materials` as `not_selectable_in_market`.
 
 Response `data[]`: summary cards `{id, name, categories[], capabilities[], lifecycle {is_eol, is_new}, selectable_markets, documentation_status, calculation_status, unit_selection?}`. `documentation_status` is the reviewed rule-guide status only; official manuals and datasheets are in `description.official_documents`. `unit_selection.kind` is `inverter_only` or `unit_only`. `selectable_markets` is the granted material-backed selection scope (`null` means unknown). Optional `unit_selection: {kind: "inverter_only", quantity: 1}` declares the standalone entry independently of system calculation; it does not prove current candidates. Read details, `url`, `image_url`, `rule_coverage` and `next_actions` from the product resource.
 
