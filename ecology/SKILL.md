@@ -25,6 +25,6 @@ Read the deployed workflow once per task and follow it; it covers task depth, ma
 | HTTP | `GET /workflow` | `GET /workflow/materials` | `GET /workflow/plug-in` |
 | MCP | `ecology://workflow` | `ecology://workflow/materials` | `ecology://workflow/plug-in` |
 
-If HTTP `/workflow` returns 404, the service predates it: read the MCP resource instead, or report that the workflow is unavailable. Never substitute a repository copy. Operations, inputs and the contract version also come from the service: `GET /portfolio` `endpoints`, a product's `next_actions`, and the `X-Ecology-API-Version` header.
+If HTTP `/workflow` returns 404, the service predates it: read the MCP resource instead. If neither is available, say so, then answer only read-only product and model information; do not query PNs or evaluate configurations until the workflow is available. Never substitute a repository copy or rules from memory. Operations, inputs and the contract version also come from the service: `GET /portfolio` `endpoints`, a product's `next_actions`, and the `X-Ecology-API-Version` header.
 
 Example, one Australian market overview: `ecology_market_models({"market":"AU"})` over MCP, or `GET /market-models?market=AU` over HTTP.
