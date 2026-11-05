@@ -3,60 +3,60 @@ name: ecology
 description: Browse Growatt products, select one inverter by market and rated kW or one accessory unit by market and model, or configure systems through the Ecology API or MCP. Default to product information and component quantities; query or verify PN only when explicitly requested. Does not place orders, manage API Keys or maintain the server.
 ---
 
-# Ecology configuration
+# Ecology
 
-Answer at the requested depth from current Ecology results: a product list, model information, one-inverter alternatives, or a system proposal. Load the deployed workflow from the connected service before choosing defaults or querying materials. This entry point owns skill discovery and routing; it does not own product rules, PN-to-factory mappings or quantities.
+Answer at the depth asked — a product list, model facts, single-unit alternatives or a system proposal — from the connected Ecology service. The service owns the contract, catalog, rules, quantities and candidates. This Skill only says how to connect, what to discover, and the few judgments the API cannot make for you.
 
-## Choose the connection once
+## Connect
 
-Default to the direct HTTP API at `https://ecology.growatt.com/api/v1/ecology`: it serves the company-domain contract 1.40. Preserve an explicitly configured connection and its route-specific credential; this update does not migrate host settings or assert that another deployment has the same contract. The host manages an authorized application Key (for example `ECOLOGY_API_TOKEN` in its secret environment) or an employee OAuth Bearer token for the shared Ecology resource. Call its HTTP paths without MCP tool or resource discovery; [Sources and transport](references/sources.md) maps the same nine operations, documents each endpoint's capability, scope and inputs, and links the field-level [API schema](references/api-schema.md). Use the cloud Streamable HTTP endpoint `https://ecology.growatt.com/api/v1/ecology/mcp` only for an explicitly chosen MCP connection or when direct API access is not configured.
+- **HTTP API** (default): `https://ecology.growatt.com/api/v1/ecology`.
+- **Cloud MCP** (Streamable HTTP): `https://ecology.growatt.com/api/v1/ecology/mcp`. Use it when it is the chosen connection or no API credential is configured.
+- Send `Authorization: Bearer` with an application Key from the host's secret environment or a host-managed employee OAuth token. Never put a credential in a URL, file, command argument or output.
+- Keep the connection and identity already chosen for the task. Do not extract an MCP token for HTTP, create a Key to change route, or switch identity after a denial.
+- Host setup and the Key-versus-OAuth choice: [connection](references/connection.md).
+- Send a descriptive `User-Agent` on HTTP. A plain-text 403 `error code: 1010` is an edge block of the client signature, not a credential problem: set a `User-Agent` and retry once.
 
-Preserve an explicit connection or authentication choice. Otherwise use an existing authorized direct API integration first; if none exists, reuse an existing employee Feishu OAuth cloud MCP connection or follow the [cloud setup](references/sources.md#cloud-setup-for-codex-and-pi). Use only a credential already authorized for the selected route. Do not extract tokens from an MCP host for HTTP API, create or retrieve a Key merely to change transport, or switch identities after a denial. Identify the mode from non-secret host connection metadata and state it once; a tool name or successful response alone does not prove OAuth.
+## Discover; do not assume
 
-If the selected route needs setup or renewed sign-in, report that requirement once using the [connection reference](references/sources.md); do not silently switch credentials or routes. Let the host refresh OAuth normally. Do not repeatedly ask for an authentication choice on each operation, change host credentials, or switch identities after a grant denial. Keep the same authorized connection for the task.
+Nothing below is copied into this Skill; read it from the service each task and reuse identical results within the task.
 
-## Load the workflow once
+| Need | Source |
+| --- | --- |
+| Contract version | `X-Ecology-API-Version` response header |
+| Operations, paths, MCP tool names, scopes, required inputs and availability for this credential | `GET /portfolio` → `endpoints` (only call it when grants or operations are unknown) |
+| What can be done next for one product in one market, and why not | `GET /products/{product}` → `next_actions` and their `status` |
+| Calculation inputs, schemes, bounds and selectable components | `GET /products/{product}/rules` → `schemes[].rule_block` and `components` |
+| Field errors | 400 `error.issues` paths; correct every listed field before resending |
+| Routing guidance and workflow (MCP) | Server instructions, then the `ecology://workflow` resource once per task; read `ecology://workflow/materials` or `ecology://workflow/plug-in` only when the task needs them |
 
-The connected service is the only workflow source; never load it from a Git repository or local checkout.
+Over HTTP there is no workflow resource. Follow `next_actions`, returned rule admission and evaluator results. If a decision needs the workflow text itself, connect the cloud MCP; never substitute a repository copy. A capability the service does not advertise does not exist for this credential: report the gap rather than inventing parameters or scanning the catalog.
 
-1. With a connected cloud Ecology MCP server, read its `ecology://workflow` resource once per task and keep the returned revision. It is the deployed workflow matching the live catalog and rules.
-2. In direct API mode there is no workflow resource over HTTP. Route from this entry, and treat live service evidence — `GET /products/{product}/rules`, returned `rule_admission`, evaluator results and derived material fields — as authoritative. If a decision needs the deployed workflow text itself, connect the cloud MCP server; do not substitute a repository copy.
+## Judgments the API cannot make for you
 
-[Sources and transport](references/sources.md) maps the HTTP/MCP operations and each endpoint's capability. Do not combine contradictory editions or silently fall back to old rules. If entry routing plus live results are insufficient for a configuration decision, report that gap; do not invent a completed configuration. Live API capabilities, returned rule admission and current candidates determine what can actually execute. A workflow document cannot enable a feature or authorize a source change.
+- **Depth.**
+  - Information and component quantities are the default.
+  - Query materials, set `resolve_materials`, or verify PNs only when the user explicitly asks for PNs or material codes. A BOM request alone does not imply PN work.
+- **One exact market per request.**
+  - Use market-wide model search (`market_models`) or a search within one market, never a catalog-wide scan.
+  - A product missing from a market's `products` list has no current PN there. That is not a sales decision.
+  - `authorized_markets` are the credential's grants. A card's `selectable_markets` are where it can be selected; choose configuration and PN markets only from those.
+- **Single units.** `unit_only` or `inverter_only` rows (the latter with exact `power_kw`) are separate quantity-one alternatives, not BOM lines. Present them; do not pick one for the user.
+- **Origin (COO).** Is separate from the sales market. For explicitly requested PN work, follow the workflow's COO default and state it; never infer origin from market or PN prefix.
+- **Pins.**
+  - Copy `version`, `rules_version` and `sku_version` from reads of the same product and market, unchanged.
+  - Copy a candidate's complete `selection` when you reuse it.
+  - On 409, reread the resources in `error.recovery.stale` and review what changed before evaluating again.
+- **Conditional components.** Unknown meter ownership is not "already installed". Keep unresolved components named, not dropped.
+- **Result boundaries.**
+  - `compatibility: unknown` and `orderable: false` stay as returned.
+  - `confirmed` means a current candidate match, not certification, stock or order approval.
+  - Card EOL is known only when `meta.lifecycle_source` is `sku_projection`.
 
-## Match the request before querying
+## Errors
 
-Follow the loaded workflow's task-depth routing. A simple product/model question must not become a full configuration or a catalog-wide model scan. Default to information and component quantities. Call material lookup, enable material resolution or verify PNs only when the user explicitly requests PN/material codes or a BOM containing them; an ordinary BOM request does not imply PN work. Do not ask about COO, meter ownership or PN choices for a catalog overview.
+- Branch on `error.code`, then `error.reason`; never parse prose. Act on `error.next_action`.
+- Retry only when `error.retryable` is true, after `Retry-After`, with unchanged inputs and pins. Otherwise report the code and `request_id`.
+- 403 `scope_missing` or `market_not_granted` needs an administrator grant. 404 `market_not_available` means choose a market from portfolio.
+- On 429, report `Retry-After` and stop the current batch.
 
-Reuse same-input, same-version results within the task, including empty lists. For a country/market model list, call `GET /market-models` with the exact market in API mode, or `ecology_market_models` in MCP mode; no portfolio or per-card scan is needed. From contract 1.40, `products` for a market lists only products with a current, non-EOL PN there; a product absent from that list is not available for sale in that market, even if its name or official page mentions the market, and is read by id only for documentation. A selectable model is not certification or sales approval. If the connected service lacks the batch operation, report that gap rather than scanning every card. Stop the current batch on 429; do not wait and resume a broad scan by default.
-
-For leaflet attributes, read the selected product's `description.specifications` using the [specification reference](references/api-schema.md#leaflet-specifications). Keep source tables and exact markets separate, preserve unknown values and source status, and use the returned labels/units/display kinds for the exact `schema_ref`; the Skill does not own a concrete attribute dictionary. Official sources decide which models a card has; a table's market is the leaflet's reference scope, not a sales market. What is actually saleable, and in which market, comes from `market_models`/`models` (the SAP projection). A printed model without a SAP match remains an official model whose sales availability is unconfirmed; do not drop it or report it as saleable.
-
-For one inverter, use `market_models` with the exact market, `selection_mode: "inverter_only"` and the requested positive `power_kw`; use `models` when the product ID is already known. Ask only for a missing market or rated kW. Each returned `selection: {kind: "inverter_only", quantity: 1}` is a separate alternative. Present alternatives without adding them into a BOM or silently choosing one. This workflow needs no battery capacity, system rules or evaluation. An unrelated system-rule gap does not block a valid single-inverter result. PN lookup remains an explicit follow-up.
-
-The [current API reference](references/api-schema.md#single-unit-selection) explains capability versus availability, exact-power matching, empty results and pagination. Use the connected service's advertised capability; an older deployment without these inputs requires a supported connection, not fabricated quantities or an automatic credential switch.
-
-## Capture configuration intent
-
-- Preserve the requested product, sizing, market and prior PN choices. Ask only for missing decisions that materially change the configuration and have no documented default.
-- Keep **use/supply market** and **COO/manufacturing origin** separate. For explicitly requested PN work, apply the documented origin default — China (Huizhou), requested as `coo: "CN"`; use `coo: "VN"` only when the customer explicitly requests the Vietnam factory or Vietnam COO — before requesting candidates, and disclose it in the result. Do not query all origins as a substitute for the default or infer COO from the sales market or PN prefix. An explicitly requested all-origin comparison remains a comparison, not a selected factory.
-- Keep the two market scopes separate. `authorized_markets` only lists the credential's grants; a card's `selectable_markets` is where its current materials support selection. Choose the configuration and PN market from `selectable_markets`, and report a granted market outside it as having no selectable model. If a response has no `selectable_markets` (older contract or `null`), confirm the market with `models` or `market-models` instead of treating a grant as selectable.
-- Treat country-specific and regional markets as separate scopes. If a destination alone leaves two intended supply scopes plausible, resolve that business choice; do not automatically merge or substitute them.
-- Use only the discovery and rule resources needed for the request, then evaluate supported quantities for a system configuration. Single-inverter selection uses the model endpoints above. Model-list responses carry the product's SKU version for later PN work; discovering it does not request PN work. Page lists as the [source map](references/sources.md#api-endpoint-capabilities) describes for the connected contract. Choose PNs and revalidate candidates only for explicitly requested material work. System quantities and eligibility come from the evaluator; single-inverter quantity and eligibility come from the model result; never reproduce its business rules in the model.
-- Take version pins from reads of the same product and market and pass them unchanged, with the same market, origin/preferences and sizing, through evaluation and revalidation. Never borrow a pin from discovery or from another product or market. Copy a candidate's complete `selection` when exposed. Do not transform its `country`, nameplate or PN.
-- For meters and other conditional components, use the returned requirement and the customer's actual ownership/needs. Unknown ownership is not “already installed”; an unconfirmed installation detail is not permission to omit a required role. Keep supported components available while naming the remaining decision.
-- Keep pending/expired evidence and missing PN mappings local to their affected components. An empty main-model set can still carry a usable SKU version for component evaluation; inspect returned status rather than declaring the entire product unsupported.
-
-## Present the result for a decision
-
-Follow the canonical presentation contract. For a system configuration, give a compact requirement summary and a component table with model/specification, quantity, supply and next action. Include PN and COO evidence only for explicitly requested material work; browsing needs only a concise product/model list. Retain included and customer-supplied lines without counting them as separate purchases. Multiple PN candidates share one component quantity. Single-inverter model rows are separate one-unit alternatives; identify the chosen alternative only after the user chooses or provides a supported preference.
-
-Distinguish a requested/default COO filter from verified component COO. If origin evidence is missing, label that component unresolved even when a default was requested. Do not use a remembered factory-to-PN mapping or choose the first of several candidates without a supported preference.
-
-Card `lifecycle.is_eol` is card-level EOL. Report it as known only when `meta.lifecycle_source` is `sku_projection`; otherwise say EOL is unknown rather than active. PN material status (`Z4`, `Z1`) and one discontinued nameplate are not card EOL. Use returned progress, unresolved explanations and selection checks. State exactly which PNs were revalidated; `confirmed` is a current candidate match, not compatibility, certification, stock or order approval. Preserve `compatibility: unknown` and `orderable: false` when returned. Keep version pins and request IDs available, and revalidate close to downstream use.
-
-## Access and recovery
-
-Use existing authorized API/MCP credentials without printing them. Direct HTTP calls use `Authorization: Bearer` with an application Key from the host secret environment or a host-managed employee OAuth token for the shared Ecology resource. Never place credentials in a URL, Skill file, command argument or output. A Skill does not configure credentials or grant access. If the chosen route is unavailable, use the setup reference and report the missing dependency; never scrape the Key administration UI or create a test Key automatically.
-
-Send a descriptive `User-Agent` with direct HTTP calls. An HTTP 403 whose body is plain text `error code: 1010` (not Ecology JSON) is an edge block of the client signature before authentication: set a `User-Agent` and retry once; it says nothing about the credential. Ecology's own errors are always JSON with `error.code`. Branch on `error.code`, then on `error.reason` when returned; never parse prose. For rejected inputs, correct the fields named in `error.issues` paths. A 403 `scope_missing` or `market_not_granted` needs an administrator grant; a 404 `market_not_available` means choose a market returned by portfolio; `unknown_endpoint` means a wrong path. Retry only when `retryable` is true, after `Retry-After`, with unchanged inputs and pins; otherwise report the code and `request_id`. On a version conflict, refresh the indicated resources and review changed facts before repeating the evaluation; do not merely replace hashes. Keep partial results honest. For OAuth expiry, let the host refresh or request renewed sign-in once; grant failures and Key issues require the existing integration contact. On a rate limit, report Retry-After and stop the current batch; do not automatically resume a broad scan. No personal saved selection, order, deployment or remote write is implied by a configuration request.
+Example, one Australian market overview: `ecology_market_models({"market":"AU"})` over MCP, or `GET /market-models?market=AU` over HTTP.

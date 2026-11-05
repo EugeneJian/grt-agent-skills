@@ -19,7 +19,7 @@
 │   └── SKILL.md                          （lark-cli CLI 本体由 npm 单独安装）
 ├── ecology/                              ← Ecology API/MCP configuration entry
 │   ├── SKILL.md
-│   └── references/sources.md
+│   └── references/connection.md
 └── claude-code-toolsearch/               ← 本 Git 仓库纳管（Claude Code 排障常识）
     └── SKILL.md                          （仅 Claude Code 适用，不分发给其他 agent）
 
@@ -48,7 +48,7 @@
 
 ## Ecology configuration Skill
 
-Use [`ecology/SKILL.md`](ecology/SKILL.md) as the shared `$ecology` entry for Growatt product browsing, single-inverter selection, system quantities and PN revalidation through the existing API/MCP. The connected service is its only runtime source: it defaults to the direct HTTP API, falls back to cloud MCP when API access is not configured, and reads the deployed workflow from the MCP `ecology://workflow` resource; no Git repository is consulted. Per-endpoint capabilities are documented in the [source map](ecology/references/sources.md#api-endpoint-capabilities).
+Use [`ecology/SKILL.md`](ecology/SKILL.md) as the shared `$ecology` entry for Growatt product browsing, single-inverter selection, system quantities and PN revalidation through the existing API/MCP. The connected service is its only runtime source: it defaults to the direct HTTP API, falls back to cloud MCP when API access is not configured, and reads the deployed workflow from the MCP `ecology://workflow` resource; no Git repository is consulted. Operations, inputs and the contract version are discovered from the service itself; [connection](ecology/references/connection.md) covers host setup.
 
 This repository owns the portable entry; AI-Copilot owns the workflow and the connected service owns current published rules and candidates. No PN catalog or factory mapping is copied here. The entry uses the same Claude/Codex link setup below; pi scans the shared source. Installing the Skill does not install an MCP server, create an API Key or authorize production changes. Reopen the host session to discover `$ecology`; GitHub publication is a separate operation.
 
