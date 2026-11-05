@@ -1,13 +1,13 @@
 # Connection
 
-Read this only to set up a host or choose between a Key and employee OAuth. Operations, inputs and the contract version come from the service itself (see [Discover; do not assume](../SKILL.md#discover-do-not-assume)).
+Read this only to set up a host or choose between a Key and employee OAuth. The workflow, operations, inputs and contract version come from the service itself (see [the workflow](../SKILL.md#then-read-the-workflow-from-the-service)).
 
 ## Ownership
 
 | Owner | Role |
 | --- | --- |
 | `EugeneJian/grt-agent-skills`, `ecology/` | This portable entry: connection and discovery routing, no product rules |
-| The connected Ecology service | Sole runtime source: contract, catalog, rules, quantities, candidates, verification and the `ecology://workflow` resource |
+| The connected Ecology service | Sole runtime source: workflow (`GET /workflow` or `ecology://workflow`), contract, catalog, rules, quantities, candidates and verification |
 | `EugeneJian/AI-Copilot` | Maintains the service and its workflow; maintainer background, never loaded during a task |
 
 ## Routes and identities
