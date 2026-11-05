@@ -18,8 +18,8 @@ This Skill tells you how to connect to the Ecology service. The service supplies
 
 | Environment | HTTP base URL | MCP server name and URL | Key variable in the host secret environment |
 | --- | --- | --- | --- |
-| **GA** (default) | `https://ecology.growatt.com/api/v1/ecology` | `ecology`: `https://ecology.growatt.com/api/v1/ecology/mcp` | `ECOLOGY_API_TOKEN` |
-| **Latest** | `https://feishu.myshine.online/api/v1/ecology` | `ecology-latest`: `https://feishu.myshine.online/api/v1/ecology/mcp` | `ECOLOGY_LATEST_API_TOKEN` |
+| **GA** (default) | `https://ecology.growatt.com/api/v1/ecology` | `ecology`: `https://ecology.growatt.com/api/v1/ecology/mcp` | `ECOLOGY_COMPANY_API_TOKEN` |
+| **Latest** | `https://feishu.myshine.online/api/v1/ecology` | `ecology-latest`: `https://feishu.myshine.online/api/v1/ecology/mcp` | `ECOLOGY_MYSHINE_API_TOKEN` |
 
 ## Procedure
 
