@@ -5,33 +5,50 @@ description: Browse Growatt products, select one inverter by market and rated kW
 
 # Ecology
 
-This Skill only connects you to the Ecology service; the service supplies everything else. Its workflow, contract, catalog, rules, quantities and candidates change with each release, so never answer from memory or from a copy.
+This Skill tells you how to connect to the Ecology service. The service supplies the workflow, contract, catalog, rules, quantities and PN candidates. These change with each release. Do not answer from memory or from a copy.
 
-## Connect
+## Terms
 
-Two environments with separate grants and credentials. A credential from one is rejected (401) by the other.
+| Term | Meaning |
+| --- | --- |
+| Environment | One Ecology deployment: **GA** or **Latest** (table below). Each has its own grants, quotas and credentials. |
+| Route | How you call one environment: **HTTP** API or cloud **MCP** server. |
+| Credential | An application Key or an employee OAuth token for one environment. A credential works only in its own environment. |
+| Workflow | The deployed rules for task depth, markets, PN, pins, presentation and errors. You read it from the environment you use. |
 
-| Environment | Use | HTTP API | Cloud MCP (Streamable HTTP) | Key in host secret environment |
-| --- | --- | --- | --- | --- |
-| **GA** (default) | Company release | `https://ecology.growatt.com/api/v1/ecology` | `…/api/v1/ecology/mcp`, server `ecology` | `ECOLOGY_API_TOKEN` |
-| **Latest** | Newest release under acceptance; use only when asked for latest/myshine or testing a new feature | `https://feishu.myshine.online/api/v1/ecology` | `…/api/v1/ecology/mcp`, server `ecology-latest` | `ECOLOGY_LATEST_API_TOKEN` |
-
-- Prefer HTTP when the chosen environment's Key or host-managed employee OAuth token is available; otherwise use that environment's MCP server.
-- Send `Authorization: Bearer` with that environment's credential only. Never put a credential in a URL, file, command argument or output.
-- Keep the environment, route and identity chosen for the task, and state which environment answered. Never fall back to the other environment, extract an MCP token for HTTP, create a Key to change route, or switch identity after a denial.
-- The two environments can run different contract versions; read `X-Ecology-API-Version` from the one you use.
-- Host setup and the Key-versus-OAuth choice: [connection](references/connection.md).
-- Send a descriptive `User-Agent` on HTTP. A plain-text 403 `error code: 1010` is an edge block of the client signature, not a credential problem: set a `User-Agent` and retry once.
-
-## Then read the workflow from the service
-
-Read the deployed workflow once per task and follow it; it covers task depth, markets, PN rules, pins, presentation and errors.
-
-| Route | Core workflow | Only for PN work | Only for NOAH/NEXA/AURA |
+| Environment | HTTP base URL | MCP server name and URL | Key variable in the host secret environment |
 | --- | --- | --- | --- |
-| HTTP | `GET /workflow` | `GET /workflow/materials` | `GET /workflow/plug-in` |
-| MCP | `ecology://workflow` | `ecology://workflow/materials` | `ecology://workflow/plug-in` |
+| **GA** (default) | `https://ecology.growatt.com/api/v1/ecology` | `ecology`: `https://ecology.growatt.com/api/v1/ecology/mcp` | `ECOLOGY_API_TOKEN` |
+| **Latest** | `https://feishu.myshine.online/api/v1/ecology` | `ecology-latest`: `https://feishu.myshine.online/api/v1/ecology/mcp` | `ECOLOGY_LATEST_API_TOKEN` |
 
-If HTTP `/workflow` returns 404, the service predates it: read the MCP resource instead. If neither is available, say so, then answer only read-only product and model information; do not query PNs or evaluate configurations until the workflow is available. Never substitute a repository copy or rules from memory. Operations, inputs and the contract version also come from the service: `GET /portfolio` `endpoints`, a product's `next_actions`, and the `X-Ecology-API-Version` header.
+## Procedure
 
-Example, one Australian market overview: `ecology_market_models({"market":"AU"})` over MCP, or `GET /market-models?market=AU` over HTTP.
+1. **Select the environment.** Use GA. Use Latest only if the user explicitly asks for Latest or myshine.
+2. **Select the route** for that environment:
+   - If its Key variable is set, or the host gives you an employee OAuth token for it, use HTTP.
+   - Else, if its MCP server is configured, use MCP.
+   - Else, stop. Tell the user that this environment is not set up, and refer to [connection](references/connection.md).
+3. **Read the workflow** once per task, from the same environment:
+
+   | Route | Always | Only if the user asks for PN or material codes | Only for NOAH, NEXA or AURA scenes |
+   | --- | --- | --- | --- |
+   | HTTP | `GET /workflow` | `GET /workflow/materials` | `GET /workflow/plug-in` |
+   | MCP | resource `ecology://workflow` | `ecology://workflow/materials` | `ecology://workflow/plug-in` |
+
+   - If HTTP `GET /workflow` returns 404, the environment is older than this endpoint. If the MCP server of the same environment is configured, read the workflow there.
+   - If you cannot read the workflow, tell the user. Then give only product and model information. Do not call `materials` or `evaluate`.
+4. **Follow the workflow.** Get operations, inputs and limits from the service, not from memory:
+   - `GET /portfolio` → `endpoints`: operations, paths, tool names, scopes, required inputs and availability for this credential.
+   - A product's `next_actions`: the next operations for that product and market.
+   - Response header `X-Ecology-API-Version`: the contract version of this environment.
+5. **Report the source.** In each answer, name the environment (GA or Latest) and its contract version.
+
+## Credential rules
+
+- Send `Authorization: Bearer <credential>` with the credential of the selected environment only.
+- Do not put a credential in a URL, file, command argument or output.
+- Do not use the other environment after a denial or an error. Do not change the credential type after a denial.
+- Do not take a token from an MCP connection to use with HTTP. Do not create a Key to change the route.
+- On HTTP, send a descriptive `User-Agent`. A 403 with the plain-text body `error code: 1010` comes from the network edge, not from the credential: set a `User-Agent` and retry once. If it fails again, report it.
+
+Example (Australia market overview): `GET /market-models?market=AU` over HTTP, or tool `ecology_market_models({"market":"AU"})` over MCP.

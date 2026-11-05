@@ -1,35 +1,45 @@
 # Connection
 
-Read this only to set up a host or choose between a Key and employee OAuth. The workflow, operations, inputs and contract version come from the service itself (see [the workflow](../SKILL.md#then-read-the-workflow-from-the-service)).
+Read this file only to set up a host or to choose between an application Key and employee OAuth. Terms (environment, route, credential, workflow) have the meanings defined in [the Skill](../SKILL.md#terms). The workflow, operations, inputs and contract version come from the service.
 
 ## Ownership
 
 | Owner | Role |
 | --- | --- |
-| `EugeneJian/grt-agent-skills`, `ecology/` | This portable entry: connection and discovery routing, no product rules |
-| The connected Ecology service | Sole runtime source: workflow (`GET /workflow` or `ecology://workflow`), contract, catalog, rules, quantities, candidates and verification |
-| `EugeneJian/AI-Copilot` | Maintains the service and its workflow; maintainer background, never loaded during a task |
+| `EugeneJian/grt-agent-skills`, `ecology/` | This entry: connection and routing only. It contains no product rules. |
+| The Ecology service (each environment) | The only runtime source: workflow, contract, catalog, rules, quantities, PN candidates and verification. |
+| `EugeneJian/AI-Copilot` | Maintains the service and the workflow. Do not read it during a task. |
 
-## Environments and identities
+## Environments
 
-| Environment | HTTP API | Cloud MCP server | Identity |
-| --- | --- | --- | --- |
-| GA (default) | `https://ecology.growatt.com/api/v1/ecology` | `ecology` → `https://ecology.growatt.com/api/v1/ecology/mcp` | Company application Key `ECOLOGY_API_TOKEN`, or employee OAuth for the company resource |
-| Latest | `https://feishu.myshine.online/api/v1/ecology` | `ecology-latest` → `https://feishu.myshine.online/api/v1/ecology/mcp` | Latest application Key `ECOLOGY_LATEST_API_TOKEN`, or employee OAuth for the latest resource |
+| Environment | Who uses it | Credential |
+| --- | --- | --- |
+| GA (default) | Employees and third parties | GA application Key in `ECOLOGY_API_TOKEN`, or employee OAuth on the GA MCP server `ecology` |
+| Latest | Internal acceptance only | Latest application Key in `ECOLOGY_LATEST_API_TOKEN`, or employee OAuth on the Latest MCP server `ecology-latest` |
 
-Each environment has its own Platform, grants, quotas and OAuth resource; Keys and tokens are issued and revoked separately, so keep them in separate secret variables and MCP entries. Both reach the same operations, but versions and data can differ until Latest is promoted to GA. Authentication never changes configuration rules. Keep the environment, route and identity selected for the task. A host holding only an MCP connection has no HTTP access, and its tokens must not be extracted. Never use a Key, or the other environment, as a fallback after a denial.
+- Each environment has its own Platform, grants, quotas and OAuth resource. Keys and tokens are issued and revoked separately for each environment.
+- Keep the two credentials in separate secret variables and separate MCP entries.
+- Both environments have the same operations. Their contract versions and data can differ until Latest is promoted to GA.
+- The credential type (Key or OAuth) does not change the configuration rules.
+- A host that has only an MCP connection has no HTTP access. Do not take its tokens for HTTP.
 
 ## Host setup
 
-The [Feishu guide](https://q02gj5lyidv.feishu.cn/wiki/UxglwhNPzi6lMek0kmvcZZn9nLf) holds the maintained quickstart snippets for both routes.
+The [Feishu guide](https://q02gj5lyidv.feishu.cn/wiki/UxglwhNPzi6lMek0kmvcZZn9nLf) has the maintained quickstart snippets.
 
-| Host | Employee setup (cloud MCP, OAuth) |
+**Employee, MCP with OAuth.** Add one MCP entry for each environment you use (URLs in [the Skill](../SKILL.md#terms)):
+
+| Host | Steps |
 | --- | --- |
-| Codex | Add `ecology` (GA) and, if needed, `ecology-latest` in `~/.codex/config.toml` with their cloud MCP URLs; run `codex mcp login <server>` for each, complete Feishu consent, then restart the session |
-| Pi | Add the same `ecology` / `ecology-latest` entries under `mcpServers` in `~/.pi/agent/mcp.json`; run `pi mcp login <server>` for each, complete Feishu consent, then `/reload` |
+| Codex | Add `ecology`, and `ecology-latest` for Latest, to `~/.codex/config.toml`. Run `codex mcp login <server>` for each. Give consent in Feishu. Restart the session. |
+| Pi | Add `ecology`, and `ecology-latest` for Latest, under `mcpServers` in `~/.pi/agent/mcp.json`. Run `pi mcp login <server>` for each. Give consent in Feishu. Run `/reload`. |
 
-Employee entries have no local command, custom Authorization header or Key binding; the host stores and refreshes OAuth. Sign in from a browser profile in the configured enterprise; another profile can return `access_denied`. If sign-in fails, report it once to the integration contact; do not bypass enterprise checks or reuse other CLI tokens.
+- An employee MCP entry has no local command, no Authorization header and no Key variable. The host stores and refreshes the OAuth token.
+- Sign in from a browser profile that belongs to the configured enterprise. A different profile can return `access_denied`.
+- If sign-in fails, report it once to the integration contact. Do not bypass the enterprise check. Do not reuse tokens from other CLIs.
 
-Third parties use GA with their own Key: `codex mcp add ecology-partner --url https://ecology.growatt.com/api/v1/ecology/mcp --bearer-token-env-var ECOLOGY_API_TOKEN` (or the same with `pi`), with the Key in the host's secret launch environment. Latest is for internal acceptance. Never print a full MCP configuration or credential store while checking whether a connection exists.
+**Employee or service, HTTP with a Key.** Put the Key in the host secret environment under the variable of its environment: `ECOLOGY_API_TOKEN` for GA, `ECOLOGY_LATEST_API_TOKEN` for Latest.
 
-Installing this Skill does not install a connector, create a Key or grant access.
+**Third party.** Use GA with the third party's own Key: `codex mcp add ecology-partner --url https://ecology.growatt.com/api/v1/ecology/mcp --bearer-token-env-var ECOLOGY_API_TOKEN` (same command with `pi`). Put the Key in the host secret environment.
+
+Do not print a full MCP configuration or credential store to check whether a connection exists. Installing this Skill does not install a connector, create a Key or grant access.
