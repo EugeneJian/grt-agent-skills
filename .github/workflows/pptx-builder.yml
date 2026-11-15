@@ -1,0 +1,29 @@
+name: pptx-builder Skill
+
+on:
+  pull_request:
+    paths:
+      - 'pptx-builder/**'
+      - '.github/workflows/pptx-builder.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'pptx-builder/**'
+      - '.github/workflows/pptx-builder.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install python-pptx==1.0.2
+      - run: python -m unittest discover -s pptx-builder/tests -v
+      - run: git diff --check

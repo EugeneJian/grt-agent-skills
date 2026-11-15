@@ -1,6 +1,6 @@
 # GRT Agent Skills · 同步与 SSOT 部署指南
 
-团队 skill 的多机同步与分发方案。共享 skill 的唯一真源（SSOT）是 `~/.agents/skills/`；Git 同步本仓库纳管的 skill（`feishu-nav`、`sql`、`shipment-maintenance`、`feishu-lark`、`ecology`），安装器独立管理 CLI 本体等其他第三方内容。
+团队 skill 的多机同步与分发方案。共享 skill 的唯一真源（SSOT）是 `~/.agents/skills/`；Git 同步本仓库纳管的 skill（`feishu-nav`、`sql`、`shipment-maintenance`、`feishu-lark`、`ecology`、`pptx-builder`），安装器独立管理 CLI 本体等其他第三方内容。
 
 ## 架构
 
@@ -20,6 +20,11 @@
 ├── ecology/                              ← Ecology API/MCP configuration entry
 │   ├── SKILL.md
 │   └── references/connection.md
+├── pptx-builder/                         ← 本 Git 仓库纳管（制作 .pptx 演示文稿）
+│   ├── SKILL.md
+│   ├── scripts/deck.py、preview.py          ← JSON 生成 PPT、逐页预览
+│   ├── references/
+│   └── tests/
 └── claude-code-toolsearch/               ← 本 Git 仓库纳管（Claude Code 排障常识）
     └── SKILL.md                          （仅 Claude Code 适用，不分发给其他 agent）
 
@@ -43,7 +48,7 @@
 
 | 通道 | 内容 | 方式 |
 |---|---|---|
-| Git | `feishu-nav`、`sql`、`shipment-maintenance`、`feishu-lark`、`claude-code-toolsearch`、`ecology`、README、忽略规则与 `.skill-tools` 分发清单 | 公开仓库 `EugeneJian/grt-agent-skills`（面向 Growatt 团队分发） |
+| Git | `feishu-nav`、`sql`、`shipment-maintenance`、`feishu-lark`、`claude-code-toolsearch`、`ecology`、`pptx-builder`、README、忽略规则与 `.skill-tools` 分发清单 | 公开仓库 `EugeneJian/grt-agent-skills`（面向 Growatt 团队分发） |
 | 安装器 | `lark-cli` CLI 本体及其他第三方 skill | 按各自官方安装/更新说明维护，不提交到本仓库 |
 
 ## Ecology configuration Skill
@@ -60,6 +65,17 @@ python3 -m unittest discover -s ecology/tests -v
 ```
 
 The Ecology-only CI runs these same checks on relevant pull requests and `main` pushes: Skill frontmatter, agent YAML, local Markdown links/anchors and JSON examples. It needs no credentials, local host layout, business data or API connection; it does not verify product rules or production behavior.
+
+## pptx-builder Skill（制作 PPT）
+
+[`pptx-builder/SKILL.md`](pptx-builder/SKILL.md) 把「帮我做一份 PPT」变成可编辑的 `.pptx`：agent 先列提纲，把每页写成 JSON，`scripts/deck.py` 按统一的中性设计生成 16:9 演示文稿（封面、目录、章节、要点、两栏、KPI、原生图表、表格、时间轴、图片、结尾，可加演讲者备注，中文字体，提示放不下的文字，可沿用公司 `.pptx` 模板）；`scripts/preview.py` 在 macOS 用 Quick Look 逐页出图并拼成总览，不驱动 PowerPoint、Keynote 或 WPS。依赖只有 `python-pptx==1.0.2`，装在工作目录自己的虚拟环境中。EnergyMind 的 AI 助手内置「制作 PPT」Profile 使用本 skill，并从本仓库同步。
+
+离线验证：
+
+```sh
+python3 -m pip install python-pptx==1.0.2
+python3 -m unittest discover -s pptx-builder/tests -v
+```
 
 ## 新电脑部署
 
