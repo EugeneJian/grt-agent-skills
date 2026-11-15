@@ -12,9 +12,12 @@
 !claude-code-toolsearch/**
 !ecology/
 !ecology/**
+!pptx-builder/
+!pptx-builder/**
 !.github/
 !.github/workflows/
 !.github/workflows/ecology-docs.yml
+!.github/workflows/pptx-builder.yml
 !README.md
 !.gitignore
 !.ignore
