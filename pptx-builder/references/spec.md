@@ -44,8 +44,9 @@ Field shapes:
 - `chart`: `{"type": "column", "categories": [...], "series": [{"name": "...", "values": [...]}]}`.
   Types: `column`, `bar` (horizontal), `line`, `pie`, `stacked_column`, `stacked_bar`. Each series needs one
   value per category. `pie` takes one series of shares (0.52 or 52 both work; labels show percentages).
-  Optional `"labels": true|false` (default: on for one series with 12 categories or fewer) and
-  `"number_format": "0.0"`.
+  Optional `"labels": true|false` (default: on for one series with 12 categories or fewer),
+  `"number_format": "0.0"`, and the value axis `"axis_min"`, `"axis_max"`, `"axis_step"` (e.g. 0, 1500, 500)
+  when the automatic range squashes the bars.
 - `takeaway` (chart, kpi): a string, or a list of short points shown beside the chart.
 - `table`: `columns` is the header row; every row in `rows` has the same number of cells. Keep it to about
   8 rows and 6 columns; the script warns beyond 10 × 7.

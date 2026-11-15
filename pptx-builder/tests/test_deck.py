@@ -51,6 +51,15 @@ class DeckTests(unittest.TestCase):
         self.assertEqual(list(charts[0].plots[0].categories), ["1月", "2月", "3月", "4月", "5月", "6月"])
         self.assertEqual(list(charts[0].plots[0].series[0].values), [12.5, 11.8, 14.2, 15.1, 16.4, 18.0])
 
+    def test_the_value_axis_can_be_set_so_bars_are_not_squashed(self):
+        spec = {"slides": [{"layout": "chart", "title": "电费", "chart": {
+            "type": "column", "categories": ["1月", "2月"], "series": [{"name": "元", "values": [980, 1240]}],
+            "axis_min": 0, "axis_max": 1500, "axis_step": 500}}]}
+        prs, _ = self.build(spec)
+        chart = next(shape.chart for shape in prs.slides[0].shapes if shape.has_chart)
+        axis = chart.value_axis
+        self.assertEqual((axis.minimum_scale, axis.maximum_scale, axis.major_unit), (0, 1500, 500))
+
     def test_tables_notes_and_chinese_fonts(self):
         prs, _ = self.build(EXAMPLE)
         table = next(shape.table for slide in prs.slides for shape in slide.shapes if shape.has_table)

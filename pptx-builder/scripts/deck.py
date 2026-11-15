@@ -245,6 +245,12 @@ class Deck:
                     item.format.fill.fore_color.rgb = color
             chart.value_axis.has_major_gridlines = True
             chart.value_axis.major_gridlines.format.line.color.rgb = self.color["panel"]
+            for key, attribute in (("axis_min", "minimum_scale"), ("axis_max", "maximum_scale"),
+                                   ("axis_step", "major_unit")):
+                if spec.get(key) is not None:
+                    setattr(chart.value_axis, attribute, spec[key])
+            if kind != "line":
+                plot.gap_width = 80                               # Fuller bars than PowerPoint's 150.
             if spec.get("labels", len(series) == 1 and len(data.categories) <= 12):
                 plot.has_data_labels = True
                 plot.data_labels.font.size = Pt(11)
