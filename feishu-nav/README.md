@@ -10,7 +10,7 @@
 
 ## 🧭 这是什么
 
-用户（简晓铭，产品经理）的飞书工作资源导航，维护在一张多维表格「导航」中：
+飞书工作资源导航维护在一张名为「导航」的多维表格中。
 
 - 入口：https://q02gj5lyidv.feishu.cn/wiki/EOxKwvjQ3igqIdkkdF3cW5SonYn?table=tblgHF305e99kLQz&view=vewrC7NlnR
 - base_token `NNpAbmIera0mI2sVig2csRSbnNb` ｜ table_id `tblgHF305e99kLQz` ｜ view_id `vewrC7NlnR`
