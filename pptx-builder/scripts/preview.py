@@ -5,7 +5,7 @@
 
 macOS only: each slide is saved as a one-slide copy and drawn by Quick Look (qlmanage), which needs no
 permission prompts. Elsewhere it explains that no preview is available; check the deck with deck.py --outline.
-Prints the overview path, which can be shown in the chat as ![overview](/absolute/path/overview.png).
+The default output is preview/<deck stem>/ beside the deck. A partial preview exits with status 1.
 """
 
 from __future__ import annotations
@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import math
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -54,28 +55,36 @@ def render(copy: Path, folder: Path, size: int) -> Path | None:
     return picture if picture.is_file() else None
 
 
-def overview(pictures: list[Path], target: Path, columns: int = 3) -> None:
+def overview(pictures: list[tuple[int, Path]], target: Path, columns: int = 3) -> None:
     thumbs = []
-    for picture in pictures:
+    for number, picture in pictures:
         with Image.open(picture) as image:
-            thumbs.append(image.convert("RGB").resize((480, round(480 * image.height / image.width))))
-    width, height, gap = 480, max(thumb.height for thumb in thumbs), 16
+            thumbs.append((number, image.convert("RGB").resize((480, round(480 * image.height / image.width)))))
+    width, height, gap = 480, max(thumb.height for _, thumb in thumbs), 16
     rows = math.ceil(len(thumbs) / columns)
     sheet = Image.new("RGB", (columns * width + (columns + 1) * gap, rows * (height + 28) + (rows + 1) * gap),
                       "#E2E8F0")
     draw = ImageDraw.Draw(sheet)
-    for index, thumb in enumerate(thumbs):
+    for index, (number, thumb) in enumerate(thumbs):
         row, column = divmod(index, columns)
         x, y = gap + column * (width + gap), gap + row * (height + 28 + gap)
         sheet.paste(thumb, (x, y + 28))
-        draw.text((x, y + 6), str(index + 1), fill="#334155")
+        draw.text((x, y + 6), str(number), fill="#334155")
     sheet.save(target)
+
+
+def clear_generated_images(out: Path) -> None:
+    """Remove the preview's reserved filenames while preserving unrelated files."""
+    for path in out.iterdir():
+        if path.name == "overview.png" or re.fullmatch(r"slide-(?:0[1-9]|[1-9][0-9]+)\.png", path.name):
+            if path.is_file() or path.is_symlink():
+                path.unlink()
 
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("deck", type=Path)
-    parser.add_argument("--out", type=Path, help="folder for the images (default: preview/ beside the deck)")
+    parser.add_argument("--out", type=Path, help="image output folder (default: preview/<deck stem>/ beside the deck)")
     parser.add_argument("--size", type=int, default=1280, help="width of each slide image in pixels")
     args = parser.parse_args(argv)
     if sys.platform != "darwin" or not shutil.which("qlmanage"):
@@ -83,11 +92,12 @@ def main(argv=None) -> int:
               "deck.py --outline " + str(args.deck))
         return 3
     deck = args.deck.resolve()
-    out = (args.out or deck.parent / "preview").resolve()
-    out.mkdir(parents=True, exist_ok=True)
+    out = (args.out or deck.parent / "preview" / deck.stem).resolve()
     count = len(Presentation(str(deck)).slides)
+    out.mkdir(parents=True, exist_ok=True)
+    clear_generated_images(out)
     pictures, missing = [], []
-    with tempfile.TemporaryDirectory(prefix="pptx-preview-") as temporary:
+    with tempfile.TemporaryDirectory(prefix=".pptx-preview-", dir=out) as temporary:
         folder = Path(temporary)
         for index in range(count):
             copy = folder / f"slide-{index + 1:02d}.pptx"
@@ -97,16 +107,17 @@ def main(argv=None) -> int:
                 missing.append(index + 1)
                 continue
             target = out / f"slide-{index + 1:02d}.png"
-            shutil.move(str(picture), target)
-            pictures.append(target)
+            picture.replace(target)
+            pictures.append((index + 1, target))
     if pictures:
         overview(pictures, out / "overview.png")
-        print(f"overview: {out / 'overview.png'}")
-    for picture in pictures:
+        label = "partial overview" if missing else "overview"
+        print(f"{label}: {out / 'overview.png'}")
+    for _, picture in pictures:
         print(picture)
     if missing:
         print(f"Quick Look could not draw slide(s): {', '.join(map(str, missing))}")
-    return 0 if pictures else 1
+    return 0 if pictures and not missing else 1
 
 
 if __name__ == "__main__":

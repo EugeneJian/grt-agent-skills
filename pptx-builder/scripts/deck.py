@@ -15,6 +15,7 @@ import math
 import os
 from pathlib import Path
 import sys
+from tempfile import TemporaryDirectory
 
 try:
     from pptx import Presentation
@@ -96,17 +97,21 @@ class Deck:
              anchor=MSO_ANCHOR.TOP, bullets=False, check=True):
         """`paragraphs`: a string, or a list of strings / {"text", "level"}; level 1 is indented and smaller."""
         items = [paragraphs] if isinstance(paragraphs, str) else list(paragraphs or ())
-        frame = slide.shapes.add_textbox(*self.box(x, y, w, h)).text_frame
+        bounds = self.box(x, y, w, h)
+        frame = slide.shapes.add_textbox(*bounds).text_frame
         frame.word_wrap, frame.auto_size, frame.vertical_anchor = True, MSO_AUTO_SIZE.NONE, anchor
         frame.margin_left = frame.margin_right = Emu(45720)
         frame.margin_top = frame.margin_bottom = Emu(27432)
+        text_width = bounds[2].inches - frame.margin_left.inches - frame.margin_right.inches
+        box_height = bounds[3].pt
         needed = 0.0
         for index, item in enumerate(items):
             text, level = (item, 0) if isinstance(item, str) else (str(item.get("text", "")), int(item.get("level", 0)))
             paragraph = frame.paragraphs[0] if index == 0 else frame.add_paragraph()
             paragraph.alignment = align
             point = size if level == 0 else max(size - 4, 10)
-            paragraph.space_after = Pt(point * 0.45 if bullets else point * 0.15)
+            spacing = point * (0.45 if bullets else 0.15)
+            paragraph.space_after = Pt(spacing)
             indent = 0.3 * level if bullets else 0
             if bullets:
                 self.run(paragraph, ("•" if level == 0 else "–") + "  ", point, "primary" if level == 0 else "muted")
@@ -114,9 +119,9 @@ class Deck:
                 if indent:
                     paragraph._p.get_or_add_pPr().set("marL", str(int(indent * 914400)))
             self.run(paragraph, text, point, color, bold=bold)
-            needed += _height(("•  " if bullets else "") + text, point, w - indent - 0.1) + point * (0.45 if bullets else 0.15)
-        if check and needed > h * 72 * 1.02:
-            self.warnings.append(f"slide {self.number}: text may not fit (about {needed / (h * 72):.0%} of its box): "
+            needed += _height(("•  " if bullets else "") + text, point, text_width - indent) + spacing
+        if check and needed > box_height * 1.02:
+            self.warnings.append(f"slide {self.number}: text may not fit (about {needed / box_height:.0%} of its box): "
                                  f"{_preview(items)}")
         return frame
 
@@ -346,13 +351,18 @@ class Deck:
 
     def save(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
-        draft = path.with_name(f".{path.stem}.building.pptx")
-        self.prs.save(str(draft))
-        try:
-            os.replace(draft, path)                               # Never leaves half a deck behind.
-        except PermissionError:
-            draft.unlink(missing_ok=True)
-            raise SpecError(f"cannot write {path}: close it in PowerPoint or choose another file name") from None
+        with TemporaryDirectory(prefix=".pptx-builder-", dir=path.parent) as folder:
+            draft = Path(folder) / "deck.pptx"
+            self.prs.save(str(draft))
+            windows = os.name == "nt"
+            publish = os.rename if windows else os.link  # Both fail if the destination exists.
+            try:
+                publish(draft, path)
+            except FileExistsError:
+                raise SpecError(f"{path} already exists; choose a new output file name") from None
+            except (OSError, NotImplementedError) as error:
+                filesystem = "" if windows else " on a file system that supports hard links"
+                raise SpecError(f"cannot publish {path}: {error}. Choose a writable output folder{filesystem}.") from None
 
 
 def _need(item: dict, key: str):
