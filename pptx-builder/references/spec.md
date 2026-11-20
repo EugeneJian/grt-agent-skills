@@ -76,5 +76,6 @@ its size, so check the preview: a 4:3 template stretches the 16:9 geometry.
 ## Output
 
 `deck.py` prints one line per slide, then `WARNING:` lines for text that may not fit and tables that are
-too large, then the path written. Exit code 2 means the JSON was wrong; the message says which slide and
-field. The deck is written to a temporary file first, so a failed build never leaves half a file.
+too large, then the path written. Exit code 2 reports an input or output error. The deck is assembled in
+a temporary location and published under a new file name. If that name already exists, use a new versioned
+name for the output. `--outline` lists the existing deck's slide structure.

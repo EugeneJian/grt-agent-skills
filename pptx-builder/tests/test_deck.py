@@ -30,8 +30,8 @@ class DeckTests(unittest.TestCase):
         self.addCleanup(folder.cleanup)
         self.folder = Path(folder.name)
 
-    def build(self, spec, **options):
-        target = self.folder / "deck.pptx"
+    def build(self, spec, *, filename="deck.pptx", **options):
+        target = self.folder / filename
         made = builder.Deck(spec, **options)
         made.build()
         made.save(target)
@@ -78,8 +78,22 @@ class DeckTests(unittest.TestCase):
         _, made = self.build(crowded)
         self.assertEqual(len(made.warnings), 1)
         self.assertIn("slide 1", made.warnings[0])
-        _, made = self.build({"slides": [{"layout": "bullets", "title": "刚好", "bullets": ["一", "二", "三"]}]})
+        _, made = self.build({"slides": [{"layout": "bullets", "title": "刚好", "bullets": ["一", "二", "三"]}]},
+                             filename="normal.pptx")
         self.assertEqual(made.warnings, [])
+
+    def test_overflow_checks_the_box_width_in_the_template(self):
+        template = Presentation()
+        template.slide_width, template.slide_height = Inches(10), Inches(7.5)
+        template_path = self.folder / "template.pptx"
+        template.save(str(template_path))
+        title = "储能系统配置与经济性分析" * 3
+        spec = {"slides": [{"layout": "cover", "title": title}]}
+        _, wide = self.build(spec)
+        _, narrow = self.build(spec, filename="narrow.pptx", template=template_path)
+        self.assertEqual(wide.warnings, [])
+        self.assertEqual(len(narrow.warnings), 1)
+        self.assertIn("slide 1: text may not fit", narrow.warnings[0])
 
     def test_mistakes_in_the_json_are_explained(self):
         for spec, message in (({"slides": []}, "slides"), ({"slides": [{"layout": "poster"}]}, "layout must be"),

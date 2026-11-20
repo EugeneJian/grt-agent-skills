@@ -1,36 +1,30 @@
-# Writing a good deck
+# 逐页设计与验收
 
-## Storylines
+## 排故事
 
-Pick one and adapt it; titles carry the message.
+- **方案介绍**。从受众要解决的问题切入，讲清方案怎样起作用、依据是什么、下一步如何实施。
+- **工作汇报**。先给当前判断和待决事项，再用数据或进度说明变化、风险和下一步。
+- **数据复盘**。先说关键发现，再逐页展示支撑证据，最后给出基于证据的行动建议。
 
-- **Solution pitch** (方案介绍): cover → agenda → problem (bullets + kpi) → solution (two_column / image) →
-  how it works (timeline or table) → results (chart + kpi) → plan (timeline) → closing.
-- **Status report** (工作汇报): cover → summary (kpi) → progress (table / timeline) → issues (bullets) →
-  next steps (bullets) → closing.
-- **Data review** (数据分析): cover → key finding (kpi) → one chart per finding (chart with takeaway) →
-  recommendations (bullets) → closing.
+## 把证据放进版式
 
-## Slide writing
+| 每页的表达任务 | 适用版式 |
+|---|---|
+| 展示趋势、份额或排名 | 用 `chart` 保留原生可编辑数据，标明单位、期间和来源 |
+| 对照不同方案或改动前后 | 用 `two_column` 对齐比较维度。需要逐项查阅时用 `table` |
+| 解释步骤、进度或里程碑 | 用 `timeline` 标出先后关系和时间点 |
+| 用少量指标支撑一个判断 | 用 `kpi` 展示关键值，补充口径和基准 |
+| 展示现场照片或结构图 | 用 `image` 保持比例，用图注交代内容及素材出处 |
 
-- Title = the conclusion: 「夏季节省电费最多」, not 「月度节省电费」.
-- One idea per slide; when a slide needs more than 6 bullets, split it.
-- Numbers: unit, period and source on the slide (`source`). Never round away the meaning.
-- Mix layouts: no more than three `bullets` slides in a row.
-- Chinese decks: Chinese punctuation, a space between Chinese and numbers with units (「18 万元」).
-- Speaker notes hold what the presenter says; slides hold what the audience reads.
+标题写结论。投屏正文以现场能快速读完为准，把推导和讲稿放进 `notes`。相邻页面的版式跟随内容变化，比较系列可以有意重复。数字使用已提供或已核实的数据。需要举例时，明确标出「示例数据」。使用用户提供、原创或具有明确可用许可的素材，保留出处。
 
-## Checking the preview
+## 看预览
 
-`preview.py` draws each slide with macOS Quick Look. Known differences from PowerPoint:
+先看总览里的节奏与对齐，再逐页核对长标题、换行、中英文字体、图表刻度、表格和图片裁切。
+构建警告是文字容量估算。先调整内容与版式，再考虑字号。用公司母版或非 16:9 页面时，以实际页面为准。
 
-- Pie charts appear in one colour without percentage labels; PowerPoint shows the colours and labels.
-- Number formats on data labels may be ignored, and axis ranges can differ.
-- Where Microsoft YaHei is not installed, Chinese text falls back to another font.
-
-These are preview limits, not faults in the deck. Real faults to fix: text running out of its box,
-overlapping shapes, empty slides, wrong numbers.
-
-Quick Look stalls on decks that have speaker notes, so `preview.py` renders copies without notes. For the
-same reason, pressing Space on such a deck in the Finder may not show a preview; PowerPoint, WPS and
-Keynote open it normally.
+`preview.py` 在 macOS 用 Quick Look 逐页渲染。预览副本移除备注，正式 PPT 保留备注。
+默认输出到 PPT 所在目录的 `preview/<PPT 文件名去扩展名>/`，也可以用 `--out` 指定输出目录。
+重跑会替换该目录里生成用的 `overview.png` 和 `slide-NN.png`。预览缺页时检查终端列出的原始页码。
+仅检查了结构时，在交付里标注视觉待验。
+Quick Look 对饼图颜色与百分比、数据标签格式、轴范围和字体替代的处理可能与 PowerPoint 不同。

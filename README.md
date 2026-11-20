@@ -68,9 +68,11 @@ The Ecology-only CI runs these same checks on relevant pull requests and `main` 
 
 ## pptx-builder Skill（制作 PPT）
 
-[`pptx-builder/SKILL.md`](pptx-builder/SKILL.md) 把「帮我做一份 PPT」变成可编辑的 `.pptx`：agent 先列提纲，把每页写成 JSON，`scripts/deck.py` 按统一的中性设计生成 16:9 演示文稿（封面、目录、章节、要点、两栏、KPI、原生图表、表格、时间轴、图片、结尾，可加演讲者备注，中文字体，提示放不下的文字，可沿用公司 `.pptx` 模板）；`scripts/preview.py` 在 macOS 用 Quick Look 逐页出图并拼成总览，不驱动 PowerPoint、Keynote 或 WPS。依赖只有 `python-pptx==1.0.2`，装在工作目录自己的虚拟环境中。EnergyMind 的 AI 助手内置「制作 PPT」Profile 使用本 skill，并从本仓库同步。
+[`pptx-builder/SKILL.md`](pptx-builder/SKILL.md) 用 JSON 源稿制作可编辑 PowerPoint。按每页的结论和证据选择版式，保留原生图表、表格和讲者备注，可复用公司母版。生成的 PPT 使用独立版本文件名。macOS 用 Quick Look 逐页预览，其他平台可核对结构提纲。制作和检查使用工作区的虚拟环境，依赖 `python-pptx==1.0.2`。
 
-离线验证：
+EnergyMind 的「助手与技能」可选择云端 `pptx-builder`。同步以 App 登记的 Git 提交为准，下载技能目录内已提交的指令、脚本、JSON 和模板等文件，并保留相对目录结构。顶层 `tests/` 用于仓库验证，技能安装包最多 100 个文件、合计 2 MiB。远端资源路径使用 ASCII 字母、数字、点、连字符或下划线，便于现有下载器读取。远端版本随 EnergyMind 更新其固定提交后生效。
+
+离线验证命令
 
 ```sh
 python3 -m pip install python-pptx==1.0.2
