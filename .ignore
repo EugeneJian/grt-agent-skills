@@ -9,5 +9,8 @@
 # 在 .gitignore 白名单之后重新忽略，pi 扫描真源时不再加载（Git 不读本文件，仍入库同步）
 claude-code-toolsearch/
 
+# EnergyMind 的分发入口由应用读取，本机 Agent 只发现原技能目录。
+/.energymind-skills/
+
 !shipment-maintenance/
 !shipment-maintenance/**

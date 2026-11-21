@@ -3,7 +3,7 @@ name: ecology
 description: Browse Growatt products, select one inverter by market and rated kW or one accessory unit by market and model, or configure systems through the Ecology API or MCP. Default to product information and component quantities; query or verify PN only when explicitly requested. Does not place orders, manage API Keys or maintain the server.
 ---
 
-# Ecology
+# Growatt-Portfolios
 
 This Skill tells you how to connect to the Ecology service. The service supplies the workflow, contract, catalog, rules, quantities and PN candidates. These change with each release. Do not answer from memory or from a copy.
 
