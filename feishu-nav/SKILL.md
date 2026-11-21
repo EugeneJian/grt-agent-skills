@@ -6,7 +6,7 @@ metadata:
   compatibility: 需要 Python 3 运行拓扑审计；业务查询需要 lark-cli 已安装、完成 config init，并以用户身份登录（lark-cli auth login --recommend；用 auth status 检查）。飞书文档访问权限跟随账号。
 ---
 
-# Growatt 个人工作导航
+# Growatt-Projects
 
 > 面向人类阅读的说明文档（含 GitHub 地址、部署与使用说明）见 [README.md](README.md)；本文件面向 Agent 消费。
 

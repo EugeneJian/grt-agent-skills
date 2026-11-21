@@ -6,7 +6,7 @@
 
 ```text
 ~/.agents/skills/                         ← 共享 skill 的真实目录
-├── feishu-nav/                           ← 本 Git 仓库纳管
+├── feishu-nav/                           ← Growatt-Projects
 │   ├── SKILL.md
 │   ├── scripts/                            ← SSOT 审计 + 工具链接预检脚本
 │   └── tests/
@@ -17,7 +17,7 @@
 │   └── tests/
 ├── feishu-lark/                          ← 本 Git 仓库纳管（lark-cli 包装 skill）
 │   └── SKILL.md                          （lark-cli CLI 本体由 npm 单独安装）
-├── ecology/                              ← Ecology API/MCP configuration entry
+├── ecology/                              ← Growatt-Portfolios
 │   ├── SKILL.md
 │   └── references/connection.md
 ├── pptx-builder/                         ← 本 Git 仓库纳管（制作 .pptx 演示文稿）
@@ -51,7 +51,15 @@
 | Git | `feishu-nav`、`sql`、`shipment-maintenance`、`feishu-lark`、`claude-code-toolsearch`、`ecology`、`pptx-builder`、README、忽略规则与 `.skill-tools` 分发清单 | 公开仓库 `EugeneJian/grt-agent-skills`（面向 Growatt 团队分发） |
 | 安装器 | `lark-cli` CLI 本体及其他第三方 skill | 按各自官方安装/更新说明维护，不提交到本仓库 |
 
-## Ecology configuration Skill
+## EnergyMind 云端技能
+
+EnergyMind 自动发现 [`.energymind-skills/`](.energymind-skills) 中列出的云端技能。目录中的每个链接都指向仓库根目录中的原有 Skill，团队安装仍从原目录加载。
+
+## Growatt-Projects
+
+[Growatt-Projects](feishu-nav/README.md) 提供个人工作导航和核心项目资源入口。手动调用使用 `$feishu-nav`。
+
+## Growatt-Portfolios
 
 Use [`ecology/SKILL.md`](ecology/SKILL.md) as the shared `$ecology` entry for Growatt product browsing, single-inverter selection, system quantities and PN revalidation through the existing API/MCP. The connected service is its only runtime source: it defaults to the company GA environment over direct HTTP (the myshine Latest environment only when asked, with its own credential), uses cloud MCP when API access is not configured, and reads the deployed workflow from the service (`GET /workflow` over HTTP, `ecology://workflow` over MCP); no Git repository is consulted. Operations, inputs and the contract version are discovered from the service itself; [connection](ecology/references/connection.md) covers host setup.
 

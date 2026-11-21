@@ -248,6 +248,14 @@ class AuditTests(unittest.TestCase):
         result, output = self.run_audit()
         self.assertEqual(result, 0, output)
 
+    def test_energymind_catalog_does_not_change_local_discovery(self):
+        source = self.valid()
+        catalog = self.canonical / ".energymind-skills"
+        catalog.mkdir()
+        (catalog / source.name).symlink_to(Path("..") / source.name, target_is_directory=True)
+        result, output = self.run_audit()
+        self.assertEqual(result, 0, output)
+
     def test_installed_skills_need_no_git_tracking(self):
         self.valid("feishu-nav")
         self.valid("lark-shared")
