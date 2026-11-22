@@ -1,12 +1,12 @@
 ---
 name: feishu-nav
-description: 古瑞瓦特个人工作导航与核心项目资源入口（通用 Agent Skill，适配 pi/Claude Code/Codex 等支持 Agent Skills 规范的工具）。当用户提到「导航」「导航表」「我的导航」、要查看/增删导航条目、刷新 Last update，或要查项目简报、能源互联专项简报、研发下单指引、智云产品说明书、Ecology 产品卡片、产品生命周期管理中台｜阶段与资源（旧称 Ecology 生命周期阶段与资源，五阶段活动、责任单位、建设优先级及工具/数据源目录）等核心工作表时使用。包含各资源的 token 直达坐标，支持跨会话、跨工具免搜索访问。
+description: 个人工作导航与核心项目资源入口（通用 Agent Skill，适配 pi/Claude Code/Codex 等支持 Agent Skills 规范的工具）。当用户提到「导航」「导航表」「我的导航」、要查看/增删导航条目、刷新 Last update，或要查项目简报、能源互联专项简报、研发下单指引、智云产品说明书、Ecology 产品卡片、产品生命周期管理中台｜阶段与资源（旧称 Ecology 生命周期阶段与资源，五阶段活动、责任单位、建设优先级及工具/数据源目录）等核心工作表时使用。包含各资源的 token 直达坐标，支持跨会话、跨工具免搜索访问。
 license: MIT
 metadata:
   compatibility: 需要 Python 3 运行拓扑审计；业务查询需要 lark-cli 已安装、完成 config init，并以用户身份登录（lark-cli auth login --recommend；用 auth status 检查）。飞书文档访问权限跟随账号。
 ---
 
-# Growatt-Projects
+# Project Management
 
 > 面向人类阅读的说明文档（含 GitHub 地址、部署与使用说明）见 [README.md](README.md)；本文件面向 Agent 消费。
 

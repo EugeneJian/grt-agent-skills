@@ -6,7 +6,7 @@
 
 ```text
 ~/.agents/skills/                         ← 共享 skill 的真实目录
-├── feishu-nav/                           ← Growatt-Projects
+├── feishu-nav/                           ← Project Management
 │   ├── SKILL.md
 │   ├── scripts/                            ← SSOT 审计 + 工具链接预检脚本
 │   └── tests/
@@ -55,9 +55,9 @@
 
 EnergyMind 自动发现 [`.energymind-skills/`](.energymind-skills) 中列出的云端技能。目录中的每个链接都指向仓库根目录中的原有 Skill，团队安装仍从原目录加载。
 
-## Growatt-Projects
+## Project Management
 
-[Growatt-Projects](feishu-nav/README.md) 提供个人工作导航和核心项目资源入口。手动调用使用 `$feishu-nav`。
+[Project Management](feishu-nav/README.md) 提供个人工作导航和核心项目资源入口。手动调用使用 `$feishu-nav`。
 
 ## Growatt-Portfolios
 

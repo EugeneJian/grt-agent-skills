@@ -1,6 +1,6 @@
-# Growatt-Projects
+# Project Management
 
-古瑞瓦特个人工作导航与核心项目资源入口，适配 pi / Claude Code / Codex 等支持 Agent Skills 规范的工具。
+个人工作导航与核心项目资源入口，适配 pi / Claude Code / Codex 等支持 Agent Skills 规范的工具。
 
 ## 📦 GitHub 地址
 
